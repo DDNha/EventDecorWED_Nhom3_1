@@ -143,13 +143,7 @@ app.get("/about", (req, res) => {
   res.render("aboutus.html", { user: req.session.user || null });
 });
 
-// Dịch vụ
-app.get("/services", (req, res) => {
-  res.render("eventservices.html", {
-    services: SERVICES, // hiển thị TẤT CẢ dịch vụ
-    user: req.session.user || null,
-  });
-});
+// Dịch vụ (danh sách + tìm kiếm, lọc): xem /services trong js/service_routes.js
 
 // Đối tác
 app.get("/partner", async (req, res) => {
@@ -386,7 +380,7 @@ app.get("/api/cart-count", isAuthenticated, (req, res) => {
 
 // ======================================================
 
-// Chi tiết dịch vụ: /services/:id
+// Danh sách dịch vụ /services và chi tiết dịch vụ /services/:id
 const serviceRoutes = require("./js/service_routes");
 app.use("/", serviceRoutes);
 
