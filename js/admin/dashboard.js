@@ -2,6 +2,20 @@ const ctx = document.getElementById("myChart");
 const ctx2 = document.getElementById("myChartPie");
 const xValues = ["Italy", "France", "Spain", "USA", "Argentina"];
 const yValues = [55, 49, 44, 24, 15];
+const today = new Date();
+const monday = new Date(today);
+const day = monday.getDay();
+monday.setDate(monday.getDate() - (day === 0 ? 6 : day - 1));
+const labels = [];
+for (let i = 0; i < 7; i++) {
+  const date = new Date(monday);
+  date.setDate(monday.getDate() + i);
+
+  const day = String(date.getDate());
+  const month = String(date.getMonth() + 1);
+
+  labels.push(`${day}/${month}`);
+}
 const barColors = ["#b91d47", "#00aba9", "#2b5797", "#e8c3b9", "#1e7145"];
 const data = [
   {
@@ -40,10 +54,10 @@ const data = [
 new Chart(ctx, {
   type: "bar",
   data: {
-    labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+    labels: labels,
     datasets: [
       {
-        label: "# of Votes",
+        label: "Doanh thu (VNĐ)",
         data: [12, 19, 3, 5, 2, 3],
         borderWidth: 1,
         backgroundColor: "#6366f1",
@@ -101,4 +115,8 @@ new DataTable("#mytable", {
     { data: "soTien" },
     { data: "trangThai" },
   ],
+  searching: false,
+  paging: false,
+  info: false,
+  columnDefs: [{ targets: "_all", className: "dt-center" }],
 });

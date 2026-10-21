@@ -2,16 +2,12 @@
  * layout-loader.js
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  // Lấy đường dẫn thư mục hiện tại của trang đang mở
-  const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-
   async function loadComponent(containerId, fileName) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
     try {
-      // Đảm bảo fetch đúng URL theo thư mục hiện tại
-      const targetUrl = new URL(fileName, window.location.href).href;
+      const targetUrl = new URL(`/admin-assets/${fileName}`, window.location.origin);
       const res = await fetch(targetUrl);
       
       if (!res.ok) {

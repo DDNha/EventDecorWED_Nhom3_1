@@ -164,6 +164,37 @@ app.get("/partner", async (req, res) => {
     res.status(500).send("Lỗi truy vấn database");
   }
 });
+app.use(
+  "/admin-assets",
+  express.static(path.join(__dirname, "views", "admin"), { index: false }),
+);
+
+// Trang admin
+app.get("/admin", (req, res) => {
+  res.render("admin/dashboard.html");
+});
+app.get("/admin/manager-customer", (req, res) => {
+  res.render("admin/manager-customer.html");
+});
+app.get("/admin/manager-partner", (req, res) => {
+  res.render("admin/manager-partner.html");
+});
+app.get("/admin/approve-event", (req, res) => {
+  res.render("admin/approve-event.html");
+});
+app.get("/admin/available-event", (req, res) => {
+  res.render("admin/available-event.html");
+});
+app.get("/admin/orders", (req, res) => {
+  res.render("admin/orders.html");
+});
+app.get("/admin/report-review", (req, res) => {
+  res.render("admin/report-review.html");
+});
+app.get("/admin/financial-payout", (req, res) => {
+  res.render("admin/financial-payout.html");
+});
+
 // Trang chi tiết đối tác
 app.get("/partner/:id", async (req, res) => {
   const id = Number(req.params.id);
