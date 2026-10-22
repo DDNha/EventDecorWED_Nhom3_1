@@ -64,61 +64,11 @@ function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
     return next();
   }
+  if (req.headers.accept && req.headers.accept.includes("application/json")) {
+    return res.status(401).json({ error: "login_required" });
+  }
   res.redirect("/login");
 }
-
-// ================= DỮ LIỆU DỊCH VỤ DÙNG CHUNG =================
-// Dùng cho trang chủ, trang /services và giỏ hàng (id khớp với /services/:id)
-const SERVICES = [
-  {
-    id: 1,
-    name: "Gói trang trí sinh nhật cao cấp",
-    image: "/img/birthday.png",
-    rating: 4.6,
-    reviews: 125,
-    price: 1500000,
-  },
-  {
-    id: 2,
-    name: "Gói làm bánh & tiệc cho sự kiện",
-    image: "/img/BanhvaSuKien.png",
-    rating: 4.9,
-    reviews: 14,
-    price: 800000,
-  },
-  {
-    id: 3,
-    name: "Gói MC chuyên nghiệp",
-    image: "/img/anhMC.png",
-    rating: 4.6,
-    reviews: 125,
-    price: 3000000,
-  },
-  {
-    id: 4,
-    name: "Gói trang trí tiệc cuối năm",
-    image: "/img/endYear.png",
-    rating: 4.6,
-    reviews: 125,
-    price: 4000000,
-  },
-  {
-    id: 5,
-    name: "Gói chụp ảnh & quay phim sự kiện",
-    image: "/img/quayPhim.png",
-    rating: 4.6,
-    reviews: 125,
-    price: 2000000,
-  },
-  {
-    id: 6,
-    name: "Gói & phụ kiện hoa cho sự kiện",
-    image: "/img/hoaCuoi.png",
-    rating: 4.6,
-    reviews: 125,
-    price: 300000,
-  },
-];
 
 // ================= ---------------- ROUTES ---------------- =================
 
@@ -338,6 +288,10 @@ app.post("/cart/add", isAuthenticated, (req, res) => {
     });
   }
 
+  if (req.headers.accept && req.headers.accept.includes("application/json")) {
+    const count = req.session.cart.reduce((sum, item) => sum + item.qty, 0);
+    return res.json({ success: true, count });
+  }
   res.redirect("/cart");
 });
 
@@ -388,7 +342,6 @@ app.get("/api/cart-count", isAuthenticated, (req, res) => {
 // ======================================================
 
 // Chi tiết dịch vụ: /services/:id
-const serviceRoutes = require("./js/service_routes");
 app.use("/", serviceRoutes);
 
 // Đặt dịch vụ, thanh toán, lịch sử đơn hàng: /booking/:id, /orders
