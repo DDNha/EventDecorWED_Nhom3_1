@@ -3,7 +3,8 @@ const nunjucks = require("nunjucks");
 const path = require("path");
 const session = require("express-session");
 const mysql = require("mysql2/promise");
-
+const serviceRoutes = require("./js/service_routes");
+const SERVICES = serviceRoutes.SERVICES.map((s) => ({ ...s, name: s.title }));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
