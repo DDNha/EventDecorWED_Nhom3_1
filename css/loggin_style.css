@@ -1,110 +1,185 @@
-
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-  margin: 0;
   min-height: 100vh;
-  padding: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f1f5f9;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #1e293b;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
 }
 
-.auth-card {
-  width: 100%;
-  max-width: 430px;
-  padding: 32px;
+.container {
   background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 35px;
+  animation: fadeIn 0.4s ease;
 }
 
-h1 {
-  margin: 0 0 12px;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 8px;
+  color: #333;
   font-size: 28px;
 }
 
-.description {
-  margin: 0 0 24px;
-  color: #64748b;
-  line-height: 1.6;
-}
-
-label {
-  display: block;
-  margin: 16px 0 7px;
+.subtitle {
+  text-align: center;
+  color: #777;
+  margin-bottom: 30px;
   font-size: 14px;
-  font-weight: 600;
 }
 
-input {
+.form-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+.form-group input {
   width: 100%;
-  padding: 12px 13px;
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
-  background: #fff;
+  padding: 12px 15px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
   font-size: 15px;
+  transition: border-color 0.3s;
 }
 
-input:focus {
-  outline: 2px solid #bfdbfe;
-  border-color: #2563eb;
+.form-group input:focus {
+  outline: none;
+  border-color: #667eea;
 }
 
-button {
+.form-group .toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 38px;
+  cursor: pointer;
+  color: #888;
+  font-size: 14px;
+}
+
+.btn {
   width: 100%;
-  margin-top: 22px;
   padding: 13px;
   border: none;
-  border-radius: 7px;
-  background: #2563eb;
-  color: #fff;
-  font-size: 15px;
+  border-radius: 8px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s;
 }
 
-button:hover {
-  background: #1d4ed8;
+.btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  margin-top: 10px;
 }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: wait;
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
-.message {
-  overflow-wrap: anywhere;
-  line-height: 1.5;
-  font-size: 14px;
+.btn-google {
+  background: #fff;
+  color: #444;
+  border: 1.5px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
 }
 
-.footer-link {
-  margin-top: 18px;
+.btn-google:hover {
+  background: #f7f7f7;
+}
+
+.btn-google img {
+  width: 20px;
+  height: 20px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 25px 0;
+  color: #999;
+  font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #eee;
+}
+
+.divider span {
+  padding: 0 12px;
+}
+
+.links {
   text-align: center;
+  margin-top: 25px;
   font-size: 14px;
 }
 
-a {
-  color: #2563eb;
+.links a {
+  color: #667eea;
   text-decoration: none;
+  font-weight: 500;
 }
 
-a:hover {
+.links a:hover {
   text-decoration: underline;
 }
 
-@media (max-width: 480px) {
-  .auth-card {
-    padding: 24px 20px;
-  }
+.error-message {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 15px;
+  display: none;
+}
 
-  h1 {
-    font-size: 24px;
+.success-message {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 15px;
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .container {
+    padding: 30px 25px;
   }
 }
