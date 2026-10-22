@@ -71,11 +71,18 @@
 
       <div class="sd-actions">
         <a href="/booking/{{ service.id }}" class="btn btn-danger">Đặt dịch vụ</a>
+
+        <form action="/cart/add" method="POST" class="d-inline">
+          <input type="hidden" name="product_id" value="{{ service.id }}">
+          <button type="submit" class="btn btn-outline-danger">
+            <i class="fa-solid fa-cart-plus me-2"></i>Giỏ hàng
+          </button>
+        </form>
+
         <button type="button" class="btn btn-outline-secondary" id="btnSave">
           <i class="fa-regular fa-bookmark me-1"></i>Lưu
         </button>
       </div>
-    </div>
   </div>
 
   <!-- Gói bao gồm -->
