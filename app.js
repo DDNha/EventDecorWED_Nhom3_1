@@ -144,7 +144,7 @@ app.post('/register', (req, res) => {
 
 // Đăng nhập (GET & POST)
 app.get('/login', (req, res) => {
-  res.render('loggin.html'); // Hoặc loggin.html tùy theo tên file view của bạn
+  res.render('login.html'); // Hoặc loggin.html tùy theo tên file view của bạn
 });
 
 app.post('/login', async (req, res) => {
