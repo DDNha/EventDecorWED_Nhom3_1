@@ -1,10 +1,7 @@
-{% extends "base.html" %} {% block title %}Đối tác{% endblock title %}
-
-    {% block css %}    
-    <link rel="stylesheet" href="/css/detailed.css" />
-    {% endblock css %}
-
-{% block header %}
+{% extends "base.html" %} {% block title %}Đối tác{% endblock title %} {% block
+css %}
+<link rel="stylesheet" href="/css/detailed.css" />
+{% endblock css %} {% block header %}
 <div
   class="container header-page d-flex justify-content-center align-items-center"
 >
@@ -15,17 +12,16 @@
 <div class="container mb-4 mt-4">
   <section class="hero">
     <div class="logo">
-        <img class="logo-img" src="{{parts.image}}" alt="{{parts.name}}" />
+      <img class="logo-img" src="{{parts.image}}" alt="{{parts.name}}" />
     </div>
     <div class="hero-body">
       <h1>{{parts.name}}</h1>
-      <h2>
-        Đối tác tin cậy và   uy tín của chúng tôi
-      </h2>
+      <h2>Đối tác tin cậy và uy tín của chúng tôi</h2>
       <div class="actions">
-        <a class="btn primary" href="#lien-he">Liên hệ đối tác</a>
+        <a class="btn primary" href="mailto:{{parts.email}}"
+          >Liên hệ email đối tác</a
+        >
         <a class="btn btn-danger" href="#lien-he">Báo cáo & khiếu nại</a>
-
       </div>
     </div>
   </section>
@@ -34,9 +30,7 @@
     <div>
       <article class="card">
         <h2>Giới thiệu</h2>
-        <p>
-            {{parts.description}}
-        </p>
+        <p>{{parts.description}}</p>
       </article>
 
       <article class="card">
@@ -53,7 +47,7 @@
 
     <aside class="card side" id="lien-he">
       <h2>Thông tin liên hệ</h2>
-      <dl class="text-white" >
+      <dl class="text-white">
         <dt>Địa chỉ</dt>
         <dd>{{parts.address or "Đang cập nhật" }}</dd>
         <dt>Điện thoại</dt>
