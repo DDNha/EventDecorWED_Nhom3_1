@@ -11,7 +11,10 @@ const PORT = process.env.PORT || 3000;
 // Middleware đọc dữ liệu từ Form POST và JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
+app.use(
+  "/admin-assets",
+  express.static(path.join(__dirname, "views", "admin")),
+);
 // Cấu hình Express Session
 app.use(
   session({
@@ -27,7 +30,10 @@ app.use("/css", express.static(path.join(__dirname, "css")));
 app.use("/img", express.static(path.join(__dirname, "img")));
 app.use("/js", express.static(path.join(__dirname, "js")));
 app.use(express.static(path.join(__dirname, "public")));
-
+app.use(
+  "/admin-assets",
+  express.static(path.join(__dirname, "views", "admin")),
+);
 // Cấu hình Nunjucks Template Engine cho thư mục views/
 const env = nunjucks.configure("views", {
   autoescape: true,
