@@ -1,10 +1,15 @@
-// ============== CẤU HÌNH GOOGLE CLIENT ID ==============
-// Thay bằng Client ID thật của bạn từ Google Cloud Console
-const GOOGLE_CLIENT_ID = "921639641123-44j6hefhg2iobahvm24cdi3u290rabl0.apps.googleusercontent.com";
 
-// ============== HIỂN THỊ / ẨN MẬT KHẨU ==============
+/* ============== GOOGLE CLIENT ID ============== */
+const GOOGLE_CLIENT_ID =
+  "921639641123-44j6hefhg2iobahvm24cdi3u290rabl0.apps.googleusercontent.com";
+
+
+/* ============== HIỆN / ẨN MẬT KHẨU ============== */
 function togglePassword(inputId, icon) {
   const input = document.getElementById(inputId);
+
+  if (!input) return;
+
   if (input.type === "password") {
     input.type = "text";
     icon.textContent = "Ẩn";
@@ -14,174 +19,229 @@ function togglePassword(inputId, icon) {
   }
 }
 
-// ============== VALIDATE EMAIL ==============
+
+/* ============== KIỂM TRA EMAIL ============== */
 function isValidEmail(email) {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return re.test(email);
 }
 
-// ============== ĐĂNG NHẬP ==============
-function handleLogin(e) {
-  e.preventDefault();
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
+
+/* ============== HIỂN THỊ THÔNG BÁO ============== */
+function showMessage(type, message) {
   const errorDiv = document.getElementById("errorMsg");
   const successDiv = document.getElementById("successMsg");
 
-  errorDiv.style.display = "none";
-  successDiv.style.display = "none";
+  if (errorDiv) {
+    errorDiv.textContent = "";
+    errorDiv.style.display = "none";
+  }
+
+  if (successDiv) {
+    successDiv.textContent = "";
+    successDiv.style.display = "none";
+  }
+
+  const target = type === "error" ? errorDiv : successDiv;
+
+  if (target) {
+    target.textContent = message;
+    target.style.display = "block";
+  } else {
+    alert(message);
+  }
+}
+
+
+/* ============== ĐĂNG NHẬP ============== */
+async function handleLogin(e) {
+  e.preventDefault();
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
 
   if (!email || !password) {
-    errorDiv.textContent = "Vui lòng nhập đầy đủ email và mật khẩu!";
-    errorDiv.style.display = "block";
-    return;
+    return showMessage("error", "Vui lòng nhập email và mật khẩu!");
   }
 
   if (!isValidEmail(email)) {
-    errorDiv.textContent = "Email không hợp lệ!";
-    errorDiv.style.display = "block";
-    return;
+    return showMessage("error", "Email không hợp lệ!");
   }
 
-  // Gửi request lên backend (thay URL thật của bạn)
-  // Ví dụ: fetch('http://localhost:8080/api/auth/login', {...})
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({ email, password })
+    });
 
-  // Demo tạm thời (xóa khi có backend)
-  console.log("Đăng nhập với:", { email, password });
-  successDiv.textContent = "Đăng nhập thành công! (Demo)";
-  successDiv.style.display = "block";
+    const data = await response.json();
 
-  // Chuyển hướng sau 1.5s
-  // setTimeout(() => window.location.href = "/dashboard.html", 1500);
+    if (!response.ok) {
+      return showMessage("error", data.message || "Đăng nhập thất bại.");
+    }
+
+    showMessage("success", data.message || "Đăng nhập thành công!");
+
+    // Chuyển trang sau khi backend xác nhận đăng nhập thành công
+    window.location.href = data.redirect || "/";
+
+  } catch (error) {
+    console.error("Lỗi đăng nhập:", error);
+    showMessage("error", "Không thể kết nối máy chủ. Vui lòng thử lại.");
+  }
 }
 
-// ============== ĐĂNG KÝ ==============
-function handleRegister(e) {
+
+/* ============== ĐĂNG KÝ ============== */
+async function handleRegister(e) {
   e.preventDefault();
+
   const fullName = document.getElementById("fullName").value.trim();
   const email = document.getElementById("registerEmail").value.trim();
   const password = document.getElementById("registerPassword").value;
   const confirmPassword = document.getElementById("confirmPassword").value;
-  const errorDiv = document.getElementById("errorMsg");
-  const successDiv = document.getElementById("successMsg");
 
-  errorDiv.style.display = "none";
-  successDiv.style.display = "none";
+  // Các trường này có thể chưa tồn tại trong giao diện hiện tại
+  const usernameInput = document.getElementById("username");
+  const phoneInput = document.getElementById("phone");
+
+  const username = usernameInput ? usernameInput.value.trim() : "";
+  const phone = phoneInput ? phoneInput.value.trim() : "";
 
   if (!fullName || !email || !password || !confirmPassword) {
-    errorDiv.textContent = "Vui lòng điền đầy đủ thông tin!";
-    errorDiv.style.display = "block";
-    return;
+    return showMessage("error", "Vui lòng điền đầy đủ thông tin!");
   }
 
   if (!isValidEmail(email)) {
-    errorDiv.textContent = "Email không hợp lệ!";
-    errorDiv.style.display = "block";
-    return;
+    return showMessage("error", "Email không hợp lệ!");
   }
 
-  if (password.length < 6) {
-    errorDiv.textContent = "Mật khẩu phải có ít nhất 6 ký tự!";
-    errorDiv.style.display = "block";
-    return;
+  // Backend hiện yêu cầu mật khẩu ít nhất 8 ký tự
+  if (password.length < 8) {
+    return showMessage("error", "Mật khẩu phải có ít nhất 8 ký tự!");
   }
 
   if (password !== confirmPassword) {
-    errorDiv.textContent = "Mật khẩu xác nhận không khớp!";
-    errorDiv.style.display = "block";
-    return;
+    return showMessage("error", "Mật khẩu xác nhận không khớp!");
   }
 
-  // Gửi request lên backend
-  console.log("Đăng ký với:", { fullName, email, password });
-  successDiv.textContent = "Đăng ký thành công! Vui lòng đăng nhập.";
-  successDiv.style.display = "block";
+  try {
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        fullName,
+        username,
+        email,
+        phone,
+        password
+      })
+    });
 
-  // setTimeout(() => window.location.href = "login.html", 2000);
+    const data = await response.json();
+
+    if (!response.ok) {
+      return showMessage("error", data.message || "Đăng ký thất bại.");
+    }
+
+    showMessage("success", data.message || "Đăng ký thành công!");
+
+    // Đăng ký xong chuyển tới route đăng nhập của Express
+    setTimeout(() => {
+      window.location.href = "/loggin";
+    }, 1200);
+
+  } catch (error) {
+    console.error("Lỗi đăng ký:", error);
+    showMessage("error", "Không thể kết nối máy chủ. Vui lòng thử lại.");
+  }
 }
 
-// ============== LẤY LẠI MẬT KHẨU ==============
-function handleForgotPassword(e) {
-  e.preventDefault();
-  const email = document.getElementById("forgotEmail").value.trim();
-  const errorDiv = document.getElementById("errorMsg");
-  const successDiv = document.getElementById("successMsg");
 
-  errorDiv.style.display = "none";
-  successDiv.style.display = "none";
+/* ============== LẤY LẠI MẬT KHẨU ============== */
+async function handleForgotPassword(e) {
+  e.preventDefault();
+
+  const email = document.getElementById("forgotEmail").value.trim();
 
   if (!email) {
-    errorDiv.textContent = "Vui lòng nhập email!";
-    errorDiv.style.display = "block";
-    return;
+    return showMessage("error", "Vui lòng nhập email!");
   }
 
   if (!isValidEmail(email)) {
-    errorDiv.textContent = "Email không hợp lệ!";
-    errorDiv.style.display = "block";
-    return;
+    return showMessage("error", "Email không hợp lệ!");
   }
 
-  // Gửi request lên backend để gửi mail reset
-  console.log("Gửi link reset mật khẩu tới:", email);
-  successDiv.textContent = "Đã gửi link đặt lại mật khẩu vào email của bạn (nếu email tồn tại)!";
-  successDiv.style.display = "block";
+  // Chưa gọi API vì backend gửi email đặt lại mật khẩu
+  // chưa được triển khai.
+  showMessage(
+    "error",
+    "Chức năng lấy lại mật khẩu chưa được kết nối máy chủ."
+  );
 }
 
-// ============== GOOGLE SIGN-IN ==============
+
+/* ============== GOOGLE SIGN-IN ============== */
+/*
+  Giữ Google Sign-In ở chế độ demo.
+  Muốn đăng nhập Google thật cần gửi credential lên backend
+  và xác minh token tại máy chủ.
+*/
 function handleGoogleCredentialResponse(response) {
-  // response.credential là JWT token từ Google
-  console.log("Google ID Token:", response.credential);
+  console.log("Google ID Token đã nhận.");
 
-  // Gửi token này lên backend để xác thực
-  // fetch('http://localhost:8080/api/auth/google', {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify({ token: response.credential })
-  // })
-  // .then(res => res.json())
-  // .then(data => {
-  //     // Lưu token, chuyển hướng...
-  // });
-
-  alert("Đăng nhập Google thành công! (Demo - kiểm tra console)");
+  alert(
+    "Google Sign-In hiện chưa được kết nối với tài khoản website."
+  );
 }
 
-// Khởi tạo Google Identity Services
 function initGoogleSignIn() {
   if (typeof google === "undefined") {
-    console.warn("Google Identity Services chưa load");
+    console.warn("Google Identity Services chưa được tải.");
     return;
   }
+
+  const googleButton = document.getElementById("googleBtn");
+
+  if (!googleButton) return;
 
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
     callback: handleGoogleCredentialResponse
   });
 
-  // Render nút Google
-  google.accounts.id.renderButton(
-    document.getElementById("googleBtn"),
-    {
-      theme: "outline",
-      size: "large",
-      width: "100%",
-      text: "continue_with",
-      shape: "rectangular"
-    }
-  );
+  google.accounts.id.renderButton(googleButton, {
+    theme: "outline",
+    size: "large",
+    width: "100%",
+    text: "continue_with",
+    shape: "rectangular"
+  });
 }
 
-// Tự động khởi tạo khi trang load
-window.onload = function () {
-  // Chỉ init Google nếu có element
+
+/* ============== KHỞI TẠO TRANG ============== */
+window.addEventListener("load", function () {
   if (document.getElementById("googleBtn")) {
-    // Đợi script Google load xong
-    const checkGoogle = setInterval(() => {
-      if (typeof google !== "undefined") {
-        clearInterval(checkGoogle);
-        initGoogleSignIn();
-      }
-    }, 100);
+    if (typeof google !== "undefined") {
+      initGoogleSignIn();
+    } else {
+      const checkGoogle = setInterval(() => {
+        if (typeof google !== "undefined") {
+          clearInterval(checkGoogle);
+          initGoogleSignIn();
+        }
+      }, 100);
+
+      // Tránh để interval chạy mãi nếu Google không tải được
+      setTimeout(() => clearInterval(checkGoogle), 10000);
+    }
   }
-};
+});
