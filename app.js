@@ -2,8 +2,7 @@ const express = require("express");
 const nunjucks = require("nunjucks");
 const path = require("path");
 const session = require("express-session");
-// const mysql = require("mysql2/promise");
-const { Pool } = require("pg");
+const mysql = require("mysql2/promise");
 const serviceRoutes = require("./js/service_routes");
 const SERVICES = serviceRoutes.SERVICES.map((s) => ({ ...s, name: s.title }));
 const app = express();
@@ -45,46 +44,26 @@ app.set("view engine", "html");
 env.addFilter("vnd", (n) => Number(n).toLocaleString("vi-VN"));
 
 // Kết nối SQL (Pool)
-// const pool = mysql.createPool({
-//   host: "localhost",
-//   user: "root",
-//   password: "", // Điền mật khẩu MySQL của bạn nếu có
-//   database: "node_auth_demo", // Tên database của bạn
-//   waitForConnections: true,
-//   connectionLimit: 10,
-//   queueLimit: 0,
-// });
-const pool = new Pool({
+const pool = mysql.createPool({
   host: "localhost",
-  port: 5432,
-  user: "postgres",
-  password: "1234",
-  database: "node_auth_demo",
-  max: 10,
+  user: "root",
+  password: "", // Điền mật khẩu MySQL của bạn nếu có
+  database: "node_auth_demo", // Tên database của bạn
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
 async function testConnection() {
   try {
-    const client = await pool.connect();
-    console.log("Kết nối PostgreSQL thành công!");
-    client.release(); // BẮT BUỘC release, nếu không sẽ cạn connection
+    await pool.getConnection();
+    console.log("Kết nối MySQL thành công!");
   } catch (error) {
-    console.error("Lỗi kết nối PostgreSQL:", error);
+    console.error("Lỗi kết nối MySQL:", error);
   }
 }
 
-testConnection();
-
-// async function testConnection() {
-//   try {
-//     await pool.getConnection();
-//     console.log("Kết nối MySQL thành công!");
-//   } catch (error) {
-//     console.error("Lỗi kết nối MySQL:", error);
-//   }
-// }
-
-// testConnection().then();
+testConnection().then();
 
 // Middleware kiểm tra xem người dùng đã đăng nhập chưa
 function isAuthenticated(req, res, next) {
@@ -102,12 +81,9 @@ function isAuthenticated(req, res, next) {
 // Trang chủ
 app.get("/", async (req, res) => {
   try {
-    // const [partners] = await pool
-    //   .query(`SELECT * FROM partners`)
-    //   .catch(() => [[]]);
-    const { rows: partners } = await pool
+    const [partners] = await pool
       .query(`SELECT * FROM partners`)
-      .catch(() => [{ rows: [] }]);
+      .catch(() => [[]]);
     res.render("index.html", {
       services: SERVICES.slice(0, 6), // chỉ 6 dịch vụ nổi bật
       part: partners,
@@ -161,18 +137,13 @@ app.get("/partner/:id", async (req, res) => {
       FROM partners p
       JOIN partner_specialties ps ON ps.partner_id = p.id
       JOIN specialties s ON s.id = ps.specialty_id
-      WHERE p.id = $1`;
-    // const [rows] = await pool.query(sql, [id]);
-    const { rows } = await pool.query(sql, [id]);
+      WHERE p.id = ?`;
+    const [rows] = await pool.query(sql, [id]);
     if (rows.length === 0) {
       return res.status(404).send("Không tìm thấy đối tác");
     }
-    // const [other] = await pool.query(
-    //   `SELECT id, name FROM partners where id <> ? limit 2`,
-    //   [id],
-    // );
-    const { rows: other } = await pool.query(
-      `SELECT id, name FROM partners WHERE id <> $1 LIMIT 2`,
+    const [other] = await pool.query(
+      `SELECT id, name FROM partners where id <> ? limit 2`,
       [id],
     );
     return res.render("detailed-partner.html", {
@@ -196,8 +167,7 @@ app.get("/services", (req, res) => {
 // Đối tác
 app.get("/partner", async (req, res) => {
   try {
-    // const [partners] = await pool.query(`SELECT * FROM partners`);
-    const { rows: partners } = await pool.query(`SELECT * FROM partners`);
+    const [partners] = await pool.query(`SELECT * FROM partners`);
     res.render("partner.html", {
       part: partners,
       user: req.session.user || null,
