@@ -27,7 +27,8 @@
     "express-session": "^1.19.0",
     "mysql2": "^3.24.5",
     "nodemailer": "^10.1.0",
-    "nunjucks": "^3.2.4"
+    "nunjucks": "^3.2.4",
+    "pg": "^8.23.1"
   },
   "main": "app.js",
   "overrides": {
