@@ -1,4 +1,4 @@
-CREATE DATABASE  event_decor;
+CREATE DATABASE event_decor;
 
 USE  event_decor;
 

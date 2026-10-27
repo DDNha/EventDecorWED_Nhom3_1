@@ -1,28 +1,37 @@
-{% extends "base.html" %}
-
-{% block title %}Dịch vụ sự kiện{% endblock title %}
-
+{% extends "base.html" %} {% block title %}Dịch vụ sự kiện{% endblock title %}
 {% block header %}
-<div class="container header-page d-flex justify-content-center align-items-center">
+<div
+  class="container header-page d-flex justify-content-center align-items-center"
+>
   <h1 class="fw-bold text-white">Dịch vụ</h1>
 </div>
-{% endblock header %}
-
-{% block content %}
+{% endblock header %} {% block content %}
 <!-- Thanh tìm kiếm + bộ lọc -->
 <div class="container mb-4 mt-4">
   <div class="row align-items-center justify-content-between g-3">
     <div class="col-lg-6 col-md-6">
       <div class="search-container position-relative">
-        <input type="text" id="serviceSearch" class="form-control search-input ps-4"
-               placeholder="Tìm kiếm dịch vụ..." aria-label="Tìm kiếm dịch vụ" />
-        <i class="fas fa-search search-icon position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+        <input
+          type="text"
+          id="serviceSearch"
+          class="form-control search-input ps-4"
+          placeholder="Tìm kiếm dịch vụ..."
+          aria-label="Tìm kiếm dịch vụ"
+        />
+        <i
+          class="fas fa-search search-icon position-absolute top-50 end-0 translate-middle-y me-3 text-muted"
+        ></i>
       </div>
     </div>
 
     <div class="col-lg-3 col-md-3">
       <div class="dropdown">
-        <button class="btn btn-drop dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button
+          class="btn btn-drop dropdown-toggle w-100"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
           Loại dịch vụ
         </button>
         <ul class="dropdown-menu">
@@ -35,14 +44,30 @@
 
     <div class="col-lg-3 col-md-3">
       <div class="dropdown">
-        <button class="btn btn-drop dropdown-toggle w-100" type="button" id="priceBtn" data-bs-toggle="dropdown" aria-expanded="false">
+        <button
+          class="btn btn-drop dropdown-toggle w-100"
+          type="button"
+          id="priceBtn"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
           Mức giá
         </button>
         <ul class="dropdown-menu" id="priceMenu">
-          <li><a class="dropdown-item" href="#" data-range="all">Tất cả mức giá</a></li>
-          <li><a class="dropdown-item" href="#" data-range="low">Dưới 1 triệu</a></li>
-          <li><a class="dropdown-item" href="#" data-range="mid">1 - 3 triệu</a></li>
-          <li><a class="dropdown-item" href="#" data-range="high">Trên 3 triệu</a></li>
+          <li>
+            <a class="dropdown-item" href="#" data-range="all"
+              >Tất cả mức giá</a
+            >
+          </li>
+          <li>
+            <a class="dropdown-item" href="#" data-range="low">Dưới 1 triệu</a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="#" data-range="mid">1 - 3 triệu</a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="#" data-range="high">Trên 3 triệu</a>
+          </li>
         </ul>
       </div>
     </div>
@@ -53,11 +78,13 @@
 <div class="container mb-5">
   <div class="row g-4" id="serviceGrid">
     {% for s in services %}
-    <div class="col-12 col-sm-6 col-lg-4 service-col"
-         data-title="{{ s.title | lower }}"
-         data-price="{{ s.price }}">
+    <div
+      class="col-12 col-sm-6 col-lg-4 service-col"
+      data-title="{{ s.title | lower }}"
+      data-price="{{ s.price }}"
+    >
       <article class="service-card">
-        <img class="thumb" src="{{ s.image }}" alt="{{ s.title }}">
+        <img class="thumb" src="{{ s.image }}" alt="{{ s.title }}" />
         <div class="body">
           <h3 class="service-title">{{ s.title }}</h3>
           <div class="service-rating">
@@ -77,20 +104,24 @@
     {% endfor %}
   </div>
 
-  <p id="serviceEmpty" class="text-center text-muted mt-4" style="display:none;">
+  <p
+    id="serviceEmpty"
+    class="text-center text-muted mt-4"
+    style="display: none"
+  >
     Không tìm thấy dịch vụ phù hợp. Hãy thử từ khóa hoặc mức giá khác.
   </p>
 </div>
 
 <script>
-  var searchInput = document.getElementById('serviceSearch');
-  var priceBtn    = document.getElementById('priceBtn');
-  var currentRange = 'all';
+  var searchInput = document.getElementById("serviceSearch");
+  var priceBtn = document.getElementById("priceBtn");
+  var currentRange = "all";
 
   function inRange(price, range) {
-    if (range === 'low')  return price < 1000000;
-    if (range === 'mid')  return price >= 1000000 && price <= 3000000;
-    if (range === 'high') return price > 3000000;
+    if (range === "low") return price < 1000000;
+    if (range === "mid") return price >= 1000000 && price <= 3000000;
+    if (range === "high") return price > 3000000;
     return true;
   }
 
@@ -99,26 +130,31 @@
     var kw = searchInput.value.trim().toLowerCase();
     var shown = 0;
 
-    document.querySelectorAll('.service-col').forEach(function (col) {
-      var okName  = col.dataset.title.indexOf(kw) !== -1;
+    document.querySelectorAll(".service-col").forEach(function (col) {
+      var okName = col.dataset.title.indexOf(kw) !== -1;
       var okPrice = inRange(parseInt(col.dataset.price, 10), currentRange);
       var show = okName && okPrice;
-      col.style.display = show ? '' : 'none';
+      col.style.display = show ? "" : "none";
       if (show) shown++;
     });
 
-    document.getElementById('serviceEmpty').style.display = shown ? 'none' : 'block';
+    document.getElementById("serviceEmpty").style.display = shown
+      ? "none"
+      : "block";
   }
 
-  searchInput.addEventListener('input', applyFilter);
+  searchInput.addEventListener("input", applyFilter);
 
-  document.querySelectorAll('#priceMenu .dropdown-item').forEach(function (item) {
-    item.addEventListener('click', function (e) {
-      e.preventDefault();
-      currentRange = item.dataset.range;
-      priceBtn.textContent = currentRange === 'all' ? 'Mức giá' : item.textContent;
-      applyFilter();
+  document
+    .querySelectorAll("#priceMenu .dropdown-item")
+    .forEach(function (item) {
+      item.addEventListener("click", function (e) {
+        e.preventDefault();
+        currentRange = item.dataset.range;
+        priceBtn.textContent =
+          currentRange === "all" ? "Mức giá" : item.textContent;
+        applyFilter();
+      });
     });
-  });
 </script>
 {% endblock content %}
