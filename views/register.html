@@ -1,13 +1,12 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng ký</title>
-  <link rel="stylesheet" href="/css/loggin_style.css">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-</head>
-<body>
+
+
+{% block title %}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="/css/loggin_style.css" />
+{% endblock css %}
+
+{% block content %}
 <div class="container">
   <h2>Đăng ký</h2>
   <p class="subtitle">Tạo tài khoản mới</p>
@@ -51,5 +50,5 @@
 </div>
 
 <script src="/js/auth.js"></script>
-</body>
-</html>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+{% endblock %}
