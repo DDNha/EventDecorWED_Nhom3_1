@@ -1,6 +1,6 @@
-CREATE DATABASE node_auth_demo;
+CREATE DATABASE  event_decor;
 
-USE node_auth_demo;
+USE  event_decor;
 
 -- =====================================================
 -- 1. USERS
@@ -197,8 +197,6 @@ CREATE TABLE orders (
     payment_method VARCHAR(50),
     status ENUM(
         'pending',
-        'confirmed',
-        'processing',
         'completed',
         'cancelled'
     ) NOT NULL DEFAULT 'pending',
