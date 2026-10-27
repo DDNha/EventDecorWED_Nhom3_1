@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Hồ sơ khách hàng{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 760px;">
+  <h1 class="h3 fw-bold mb-4">Hồ sơ khách hàng</h1>
+
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4 d-flex align-items-center gap-4">
+      <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle"
+           style="width:80px;height:80px;font-size:2rem;background:linear-gradient(to right,#ed4690,#5522cc);">
+        {{ (profile.full_name or profile.username) | first | upper }}
+      </div>
+      <div>
+        <h2 class="h4 fw-bold mb-1">{{ profile.full_name or profile.username }}</h2>
+        <div class="text-secondary small mb-1">@{{ profile.username }}</div>
+        {% if profile.email %}
+        <div class="text-secondary"><i class="fa-regular fa-envelope me-2"></i>{{ profile.email }}</div>
+        {% endif %}
+        {% if profile.phone %}
+        <div class="text-secondary"><i class="fa-solid fa-phone me-2"></i>{{ profile.phone }}</div>
+        {% endif %}
+        <div class="text-secondary small mt-1">Mã khách hàng: #{{ profile.id }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6">
+      <div class="card border-0 shadow-sm rounded-4 text-center p-3">
+        <div class="text-secondary small">Số đơn đã đặt</div>
+        <div class="fs-3 fw-bold" style="color:#5522cc;">{{ stats.count }}</div>
+      </div>
+    </div>
+    <div class="col-6">
+      <div class="card border-0 shadow-sm rounded-4 text-center p-3">
+        <div class="text-secondary small">Tổng chi tiêu</div>
+        <div class="fs-3 fw-bold" style="color:#ed4690;">{{ stats.spent | vnd }} ₫</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a href="/orders" class="btn text-white rounded-pill px-4"
+       style="background: linear-gradient(to right,#ed4690,#5522cc);">
+      <i class="fa-solid fa-clock-rotate-left me-2"></i>Xem lịch sử thanh toán
+    </a>
+    <a href="/cart" class="btn btn-outline-secondary rounded-pill px-4">Giỏ hàng</a>
+  </div>
+</div>
+{% endblock %}

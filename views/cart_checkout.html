@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Thanh toán{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <h2 class="fw-bold mb-4">Xác nhận đơn hàng</h2>
+
+  {% if error %}
+  <div class="alert alert-danger" role="alert">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/checkout" class="row g-4">
+    <!-- Thông tin đặt dịch vụ -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3">Thông tin sự kiện</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Họ tên người đặt</label>
+              <input class="form-control" name="name" value="{{ form.name }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Số điện thoại</label>
+              <input class="form-control" name="phone" value="{{ form.phone }}" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Địa điểm tổ chức</label>
+              <input class="form-control" name="address" value="{{ form.address }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Ngày tổ chức</label>
+              <input type="date" class="form-control" name="date" value="{{ form.date }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Giờ (tuỳ chọn)</label>
+              <input type="time" class="form-control" name="time" value="{{ form.time }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Ghi chú</label>
+              <textarea class="form-control" name="note" rows="3">{{ form.note }}</textarea>
+            </div>
+          </div>
+
+          <h5 class="fw-bold mt-4 mb-3">Phương thức thanh toán</h5>
+          {% for key, label in methods %}
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="radio" name="method" id="m-{{ key }}"
+                   value="{{ key }}" {% if form.method == key or (not form.method and loop.first) %}checked{% endif %}>
+            <label class="form-check-label" for="m-{{ key }}">{{ label }}</label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Tóm tắt -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3">Tóm tắt ({{ lines | length }} dịch vụ)</h5>
+          {% for l in lines %}
+          <div class="d-flex justify-content-between mb-2 small">
+            <span class="text-muted">{{ l.service.title }} x{{ l.qty }}</span>
+            <span>{{ l.lineTotal | vnd }} ₫</span>
+          </div>
+          {% endfor %}
+          <hr>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Tạm tính</span><span>{{ subtotal | vnd }} ₫</span>
+          </div>
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted">Phí dịch vụ (5%)</span><span>{{ fee | vnd }} ₫</span>
+          </div>
+          <div class="d-flex justify-content-between mb-4">
+            <span class="fw-bold fs-5">Tổng cộng</span>
+            <span class="fw-bold fs-5" style="color:#ed4690;">{{ total | vnd }} ₫</span>
+          </div>
+          <button type="submit" class="btn w-100 text-white fw-bold rounded-pill py-2"
+                  style="background: linear-gradient(to right,#ed4690,#5522cc);">
+            Xác nhận & thanh toán
+          </button>
+          <a href="/cart" class="btn btn-link w-100 mt-2">Quay lại giỏ hàng</a>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
