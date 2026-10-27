@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Đối tác nổi bật{% endblock title %}
+
+{% block content %}
+<style>
+  .pl-wrap { padding: 32px 0 56px; }
+  .pl-breadcrumb { font-size: .9rem; margin-bottom: 20px; }
+  .pl-breadcrumb a { color: #6c757d; text-decoration: none; }
+  .pl-breadcrumb a:hover { color: #dc3545; }
+
+  .pl-head { margin-bottom: 28px; }
+  .pl-head h1 { font-size: 1.9rem; font-weight: 700; margin-bottom: 6px; }
+  .pl-head p { color: #6c757d; margin: 0; }
+
+  .pl-search { max-width: 360px; margin-top: 16px; }
+
+  .pl-card {
+    display: block; height: 100%; text-decoration: none; color: inherit;
+    border: 1px solid #e5e5e5; border-radius: 16px; padding: 20px;
+    background: #fff; transition: border-color .15s, box-shadow .15s;
+  }
+  .pl-card:hover { border-color: #dc3545; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+  .pl-logo {
+    width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #f5f5f5;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .pl-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .pl-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+  .pl-desc {
+    color: #555; font-size: .95rem; margin-bottom: 14px;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .pl-more { color: #dc3545; font-weight: 600; font-size: .95rem; }
+
+  .pl-empty { display: none; text-align: center; color: #6c757d; padding: 40px 0; }
+</style>
+
+<div class="container pl-wrap">
+  <nav class="pl-breadcrumb" aria-label="breadcrumb">
+    <a href="/">Trang chủ</a> / <span>Đối tác</span>
+  </nav>
+
+  <div class="pl-head">
+    <h1>Đối tác nổi bật</h1>
+    <p>Các đối tác uy tín, chất lượng được nhiều khách hàng tin tưởng</p>
+    <input type="search" id="plSearch" class="form-control pl-search"
+           placeholder="Tìm đối tác theo tên..." aria-label="Tìm đối tác">
+  </div>
+
+  <div class="row g-4" id="plGrid">
+    {% for p in part %}
+    <div class="col-12 col-md-6 col-lg-4 pl-item" data-name="{{ p.name | lower }}">
+      <a href="/partner/{{ p.id }}" class="pl-card">
+        <div class="pl-logo">
+          <img src="{{ p.image }}" alt="{{ p.name }}">
+        </div>
+        <h2 class="pl-name">{{ p.name }}</h2>
+        <p class="pl-desc">{{ p.description }}</p>
+        <span class="pl-more">Xem chi tiết</span>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="pl-empty" id="plEmpty">Không tìm thấy đối tác phù hợp. Hãy thử từ khóa khác.</div>
+</div>
+
+<script>
+  // Lọc đối tác theo tên ngay trên trang
+  var plInput = document.getElementById('plSearch');
+  plInput.addEventListener('input', function () {
+    var kw = plInput.value.trim().toLowerCase();
+    var shown = 0;
+    document.querySelectorAll('.pl-item').forEach(function (el) {
+      var match = el.dataset.name.indexOf(kw) !== -1;
+      el.style.display = match ? '' : 'none';
+      if (match) shown++;
+    });
+    document.getElementById('plEmpty').style.display = shown ? 'none' : 'block';
+  });
+</script>
+{% endblock content %}

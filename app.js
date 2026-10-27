@@ -4,7 +4,7 @@ const path = require("path");
 const session = require("express-session");
 const mysql = require("mysql2/promise");
 const serviceRoutes = require("./js/service_routes");
-const SERVICES = serviceRoutes.SERVICES.map((s) => ({ ...s, name: s.title }));
+const SERVICES = [];
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -56,6 +56,39 @@ async function testConnection() {
 }
 
 testConnection().then();
+// Nạp dịch vụ từ database vào bộ nhớ
+async function loadServices() {
+  const [rows] = await pool.query(`
+    SELECT s.*, p.name AS partner
+    FROM services s
+    LEFT JOIN partners p ON p.id = s.partner_id
+    ORDER BY s.id
+  `);
+
+  const list = rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    name: r.title,
+    image: r.image,
+    rating: Number(r.rating),
+    reviews: r.reviews,
+    price: r.price,
+    category: r.category,
+    short: r.short_desc,
+    duration: r.duration,
+    area: r.area,
+    partner: r.partner,
+    partner_id: r.partner_id,
+    includes: String(r.includes || '').split('\n').filter(Boolean),
+    description: r.description
+  }));
+
+  // Cập nhật tại chỗ để cả app.js và service_routes.js cùng thấy dữ liệu mới
+  SERVICES.length = 0;
+  SERVICES.push(...list);
+  serviceRoutes.SERVICES.length = 0;
+  serviceRoutes.SERVICES.push(...list);
+}
 
 // Middleware kiểm tra xem người dùng đã đăng nhập chưa
 function isAuthenticated(req, res, next) {
@@ -73,7 +106,8 @@ function isAuthenticated(req, res, next) {
 // Trang chủ
 app.get('/', async (req, res) => {
   try {
-    const [partners] = await pool.query(`SELECT * FROM partners`).catch(() => [[]]);
+    const [partners] = await pool.query('SELECT * FROM partners');
+    console.log('Số đối tác lấy được:', partners.length, partners);
     res.render('index.html', {
       services: SERVICES.slice(0, 6),   // chỉ 6 dịch vụ nổi bật
       part: partners,
@@ -93,7 +127,7 @@ app.get('/about', (req, res) => {
 // Dịch vụ
 app.get('/services', (req, res) => {
   res.render('eventservices.html', {
-    services: SERVICES,                 // hiển thị TẤT CẢ dịch vụ
+    services: SERVICES,
     user: req.session.user || null
   });
 });
@@ -101,9 +135,39 @@ app.get('/services', (req, res) => {
 // Đối tác
 app.get('/partner', async (req, res) => {
   try {
-    const [partners] = await pool.query(`SELECT * FROM partners`);
-    res.render('partner.html', {
+    const [partners] = await pool.query('SELECT * FROM partners');
+    res.render('partner.html', {          // đổi từ partner_list.html
       part: partners,
+      user: req.session.user || null
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Lỗi truy vấn database");
+  }
+});
+
+// Chi tiết đối tác: /partner/:id
+app.get('/partner/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM partners WHERE id = ?',
+      [req.params.id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).send('Không tìm thấy đối tác.');
+    }
+
+    const partner = rows[0];
+
+    // Lấy các dịch vụ thuộc đối tác này
+    const services = SERVICES.filter(
+      (s) => s.partner_id === partner.id || s.partner === partner.name
+    );
+
+    res.render('partner_detail.html', {
+      partner,
+      services,
       user: req.session.user || null
     });
   } catch (error) {
@@ -276,6 +340,12 @@ app.use("/", serviceRoutes);
 const bookingRoutes = require('./js/booking_routes');
 app.use('/', bookingRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server đang chạy thành công tại: http://localhost:${PORT}`);
-});
+loadServices()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server đang chạy thành công tại: http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Không nạp được dịch vụ từ database:', err);
+  });
