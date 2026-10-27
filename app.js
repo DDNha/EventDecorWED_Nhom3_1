@@ -398,6 +398,31 @@ app.get('/api/current-user', isAuthenticated, (req, res) => {
   res.json({ user: req.session.user });
 });
 
+app.get('/profile', isAuthenticated, async (req, res) => {
+  try {
+    const uid = req.session.user.id;
+
+    const [users] = await pool.execute(
+      'SELECT id, username, email, full_name, phone FROM `user` WHERE id = ?',
+      [uid]
+    );
+    if (!users.length) return res.redirect('/logout');
+
+    const [[stats]] = await pool.query(
+      'SELECT COUNT(*) AS count, COALESCE(SUM(final_amount), 0) AS spent FROM orders WHERE user_id = ?',
+      [uid]
+    );
+
+    res.render('profile.html', {
+      profile: users[0],
+      stats: { count: stats.count, spent: Number(stats.spent) },
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Lỗi trang hồ sơ:', error);
+    res.status(500).send('Lỗi truy vấn database');
+  }
+});
 // ======================================================
 // ===           QUẢN LÝ GIỎ HÀNG                     ===
 // ======================================================
