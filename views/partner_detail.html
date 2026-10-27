@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ partner.name }}{% endblock title %}
+
+{% block content %}
+<style>
+  .pd-wrap { padding: 32px 0 56px; }
+  .pd-breadcrumb { font-size: .9rem; margin-bottom: 20px; }
+  .pd-breadcrumb a { color: #6c757d; text-decoration: none; }
+  .pd-breadcrumb a:hover { color: #dc3545; }
+
+  .pd-image {
+    width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+    border-radius: 16px; background: #eee;
+  }
+  .pd-title { font-weight: 700; font-size: 1.9rem; line-height: 1.3; margin-bottom: 12px; }
+  .pd-desc { color: #444; line-height: 1.7; max-width: 60ch; margin-bottom: 20px; }
+
+  .pd-box { border: 1px solid #e5e5e5; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
+  .pd-box i { width: 22px; color: #6c757d; }
+
+  .pd-section { margin-top: 44px; }
+  .pd-section h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 16px; }
+
+  .pd-service { text-decoration: none; color: inherit; display: block; }
+  .pd-service img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; }
+  .pd-service .name { font-weight: 600; margin-top: 8px; }
+  .pd-service .price { color: #dc3545; font-weight: 600; }
+  .pd-service:hover .name { color: #dc3545; }
+</style>
+
+<div class="container pd-wrap">
+  <nav class="pd-breadcrumb" aria-label="breadcrumb">
+    <a href="/">Trang chủ</a> / <a href="/partner">Đối tác</a> / <span>{{ partner.name }}</span>
+  </nav>
+
+  <div class="row g-5">
+    <div class="col-12 col-lg-6">
+      <img class="pd-image" src="{{ partner.image }}" alt="{{ partner.name }}">
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <h1 class="pd-title">{{ partner.name }}</h1>
+      <p class="pd-desc">{{ partner.description }}</p>
+
+      {% if partner.address or partner.phone or partner.email %}
+      <div class="pd-box">
+        {% if partner.address %}
+        <div class="mb-2"><i class="fa-solid fa-location-dot"></i>{{ partner.address }}</div>
+        {% endif %}
+        {% if partner.phone %}
+        <div class="mb-2"><i class="fa-solid fa-phone"></i>{{ partner.phone }}</div>
+        {% endif %}
+        {% if partner.email %}
+        <div><i class="fa-regular fa-envelope"></i>{{ partner.email }}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <a href="/partner" class="btn btn-outline-secondary rounded-pill px-4">
+        <i class="fa-solid fa-arrow-left me-2"></i>Quay lại danh sách
+      </a>
+    </div>
+  </div>
+
+  <!-- Dịch vụ của đối tác -->
+  <section class="pd-section">
+    <h2>Dịch vụ của đối tác</h2>
+    {% if services %}
+    <div class="row g-4">
+      {% for s in services %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="/services/{{ s.id }}" class="pd-service">
+          <img src="{{ s.image }}" alt="{{ s.title }}">
+          <div class="name">{{ s.title }}</div>
+          <div class="price">{{ s.price | vnd }} VNĐ</div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Đối tác này chưa có dịch vụ nào được đăng.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock content %}
