@@ -25,9 +25,9 @@ header %}
     </div>
 
     <div class="col-lg-7 p-3">
-      <div class="contact-form" id="my-form">
+      <div class="contact-form">
         <h2 class="mb-4">Gửi tin nhắn cho chúng tôi</h2>
-        <form action="/contact" method="POST">
+        <form action="/contact" method="POST" id="my-form">
           <div class="form-group mb-3">
             <label for="name" class="form-label">Tên của bạn</label>
             <input
@@ -64,8 +64,9 @@ header %}
               placeholder="name@example.com"
               required
             />
-            <div id="email-error" class="mt-3 mb-3 text-danger fw-bold"></div>
           </div>
+          <div id="email-error" class="mt-3 mb-3 text-danger fw-bold"></div>
+
           <div class="form-group mb-4">
             <label for="message" class="form-label">Nội dung gửi</label>
             <textarea
@@ -77,8 +78,14 @@ header %}
               required
             ></textarea>
           </div>
+          <div id="message-error" class="mt-3 mb-3 text-danger fw-bold"></div>
+          <div id="form-alert" class="m-2"></div>
           <div class="d-flex justify-content-end m-2">
-            <button type="submit" class="btn btn-danger btn-submit">
+            <button
+              type="submit"
+              class="btn btn-danger btn-submit"
+              id="btn-submit"
+            >
               Gửi tin nhắn
             </button>
           </div>
@@ -101,10 +108,13 @@ header %}
 </div>
 <script>
   const form = document.getElementById("my-form");
+  const formAlert = document.getElementById("form-alert");
+  const div = document.createElement("div");
+
   //nhập form tên
   const nameInput = document.getElementById("name");
   const nameError = document.getElementById("name-error");
-  nameInput.addEventListener("input", () => {
+  const validName = () => {
     if (nameInput.value.trim().length < 2) {
       nameError.textContent = "Tên không dưới 2 ký tự";
       return false;
@@ -115,22 +125,22 @@ header %}
     }
     nameError.textContent = "";
     return true;
-  });
+  };
   //nhập form sđt
   const phoneInput = document.getElementById("phone");
   const phoneError = document.getElementById("phone-error");
-  phoneInput.addEventListener("input", () => {
+  const validPhone = () => {
     if (phoneInput.value.length < 10 || phoneInput.value.length > 10) {
       phoneError.textContent = "Số điện thoại không hợp lệ";
       return false;
     }
     phoneError.textContent = "";
     return true;
-  });
+  };
   //nhập form email
   const emailInput = document.getElementById("email");
   const emailError = document.getElementById("email-error");
-  emailInput.addEventListener("input", () => {
+  const validEmail = () => {
     const patternEmail = /^(?!.*\s)[a-zA-Z0-9]+@[a-z]+\.[a-z]+$/;
     if (!patternEmail.test(emailInput.value)) {
       emailError.textContent = "Email không hợp lệ";
@@ -138,6 +148,34 @@ header %}
     }
     emailError.textContent = "";
     return true;
+  };
+  //nhập form message
+  const messageInput = document.getElementById("message");
+  const messageError = document.getElementById("message-error");
+  const validMessage = () => {
+    if (messageInput.value.trim().length < 8) {
+      messageError.textContent = "Nhập tin nhắn tối thiểu 8 ký tự";
+      return false;
+    }
+    messageError.textContent = "";
+    return true;
+  };
+  //kiểm tra
+  nameInput.addEventListener("input", validName);
+  emailInput.addEventListener("input", validEmail);
+  phoneInput.addEventListener("input", validPhone);
+  messageInput.addEventListener("input", validMessage);
+  //xử lý contact
+  form.addEventListener("click", (e) => {
+    const result = [validName(), validEmail(), validMessage(), validPhone()];
+    if (result.includes(false)) {
+      e.preventDefault();
+      div.className = "alert alert-warning fw-bold";
+      div.setAttribute("role", "alert");
+      div.textContent = "Lỗi không thể gửi được do nhập thông tin không hợp lệ";
+      formAlert.append(div);
+    } else {
+    }
   });
 </script>
 {% endblock content %}
