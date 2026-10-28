@@ -23,7 +23,7 @@ const PAYMENT_METHODS = {
 };
 
 function getService(id) {
-  return SERVICES.find((s) => s.id === id);
+  return SERVICES.find((s) => Number(s.id) === id);
 }
 
 // GET /booking/:id  -> trang thanh toán
@@ -52,8 +52,10 @@ router.post("/booking/:id/pay", (req, res) => {
     errors.push("Số điện thoại không hợp lệ.");
   if (!date || new Date(date) < new Date(new Date().toDateString()))
     errors.push("Vui lòng chọn ngày tổ chức từ hôm nay trở đi.");
-  if (!address || !address.trim()) errors.push("Vui lòng nhập địa điểm tổ chức.");
-  if (!PAYMENT_METHODS[method]) errors.push("Vui lòng chọn phương thức thanh toán.");
+  if (!address || !address.trim())
+    errors.push("Vui lòng nhập địa điểm tổ chức.");
+  if (!PAYMENT_METHODS[method])
+    errors.push("Vui lòng chọn phương thức thanh toán.");
 
   if (errors.length) {
     return res.status(400).render("checkout.html", {

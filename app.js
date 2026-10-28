@@ -69,22 +69,18 @@ async function loadServices() {
   const [rows] = await pool.query(`
     SELECT
       p.id,
-      p.name AS title,
-      p.img AS image,
+      p.name,
+      p.img,
       p.rating,
-      p.reviewsCount AS reviews,
+      p.reviewsCount,
       p.price,
-      p.description AS short_desc,
-      p.executionTime AS duration,
-      p.location AS area,
+      p.category,
+      p.short_desc,
+      p.executionTime,
+      p.location,
       p.partner_id,
       partner.name AS partner,
-      p.description,
-      (
-        SELECT GROUP_CONCAT(pi.item_text ORDER BY pi.id SEPARATOR '\\n')
-        FROM product_inclusions pi
-        WHERE pi.product_id = p.id
-      ) AS includes
+      p.description
     FROM products p
     LEFT JOIN partners partner ON partner.id = p.partner_id
     ORDER BY p.id
@@ -92,16 +88,16 @@ async function loadServices() {
 
   const list = rows.map((r) => ({
     id: r.id,
-    title: r.title,
-    name: r.title,
-    image: r.image,
+    title: r.name,
+    name: r.name,
+    image: r.img,
     rating: Number(r.rating),
-    reviews: r.reviews,
+    reviews: r.reviewsCount,
     price: r.price,
     category: r.category,
     short: r.short_desc,
-    duration: r.duration,
-    area: r.area,
+    duration: r.executionTime,
+    area: r.location,
     partner: r.partner,
     partner_id: r.partner_id,
     includes: String(r.includes || "")
@@ -479,29 +475,29 @@ app.get("/api/current-user", isAuthenticated, (req, res) => {
   res.json({ user: req.session.user });
 });
 
-app.get('/profile', isAuthenticated, async (req, res) => {
+app.get("/profile", isAuthenticated, async (req, res) => {
   try {
     const uid = req.session.user.id;
 
     const [users] = await pool.execute(
-      'SELECT id, username, email, full_name, phone FROM `user` WHERE id = ?',
-      [uid]
+      "SELECT id, username, email, full_name, phone FROM `user` WHERE id = ?",
+      [uid],
     );
-    if (!users.length) return res.redirect('/logout');
+    if (!users.length) return res.redirect("/logout");
 
     const [[stats]] = await pool.query(
-      'SELECT COUNT(*) AS count, COALESCE(SUM(final_amount), 0) AS spent FROM orders WHERE user_id = ?',
-      [uid]
+      "SELECT COUNT(*) AS count, COALESCE(SUM(final_amount), 0) AS spent FROM orders WHERE user_id = ?",
+      [uid],
     );
 
-    res.render('profile.html', {
+    res.render("profile.html", {
       profile: users[0],
       stats: { count: stats.count, spent: Number(stats.spent) },
-      user: req.session.user
+      user: req.session.user,
     });
   } catch (error) {
-    console.error('Lỗi trang hồ sơ:', error);
-    res.status(500).send('Lỗi truy vấn database');
+    console.error("Lỗi trang hồ sơ:", error);
+    res.status(500).send("Lỗi truy vấn database");
   }
 });
 // ======================================================
