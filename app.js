@@ -2,6 +2,7 @@ const express = require("express");
 const nunjucks = require("nunjucks");
 const path = require("path");
 const session = require("express-session");
+const nodemailer = require("nodemailer");
 const mysql = require("mysql2/promise");
 const serviceRoutes = require("./js/service_routes");
 const SERVICES = [];
@@ -260,11 +261,35 @@ app.get("/contact", (req, res) => {
   res.render("contact.html", { user: req.session.user || null });
 });
 
-app.post("/contact", (req, res) => {
-  const { name, phone, email, message } = req.body;
+app.post("/contact", async (req, res) => {
+  try {
+    const { name, phone, email, message } = req.body;
+    let transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "mphuc454@gmail.com", //nhập email của bạn
+        pass: "mnzw pznk otxa jucx", //nhập pass của bạn,
+      },
+    });
+    await transporter.sendMail({
+      from: "mphuc454@gmail.com",
+      to: "daudaihoc290@gmail.com",
+      replyTo: email,
+      subject: `Liên hệ mới từ khách hàng ${name}`,
+      text: `Tên khách hàng: ${name}
+      Số điện thoại: ${phone}
+      Email: ${email}
+      Nội dung:${message}`,
+    });
+  } catch (error) {
+    console.error("Lỗi gửi email contact:", error.message);
+  }
   console.log("Thông tin liên hệ:", { name, phone, email, message });
   res.redirect("/contact");
 });
+
 const bcrypt = require("bcryptjs");
 
 // Trang đăng ký

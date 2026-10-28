@@ -110,7 +110,6 @@ header %}
   const form = document.getElementById("my-form");
   const formAlert = document.getElementById("form-alert");
   const div = document.createElement("div");
-
   //nhập form tên
   const nameInput = document.getElementById("name");
   const nameError = document.getElementById("name-error");
@@ -166,16 +165,19 @@ header %}
   phoneInput.addEventListener("input", validPhone);
   messageInput.addEventListener("input", validMessage);
   //xử lý contact
-  form.addEventListener("click", (e) => {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
     const result = [validName(), validEmail(), validMessage(), validPhone()];
     if (result.includes(false)) {
-      e.preventDefault();
       div.className = "alert alert-warning fw-bold";
       div.setAttribute("role", "alert");
       div.textContent = "Lỗi không thể gửi được do nhập thông tin không hợp lệ";
       formAlert.append(div);
-    } else {
+      return;
     }
+    const btn = document.getElementById("btn-submit");
+    btn.textContent = "Đang gửi...";
   });
 </script>
 {% endblock content %}
