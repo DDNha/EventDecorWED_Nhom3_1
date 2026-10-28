@@ -275,7 +275,7 @@ app.post("/contact", async (req, res) => {
     });
     await transporter.sendMail({
       from: "mphuc454@gmail.com",
-      to: "daudaihoc290@gmail.com",
+      to: "22130215@st.hcmuaf.edu.vn",
       replyTo: email,
       subject: `Liên hệ mới từ khách hàng ${name}`,
       text: `Tên khách hàng: ${name}
