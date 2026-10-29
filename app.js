@@ -1,3 +1,5 @@
+require('dotenv').config();
+const { OAuth2Client } = require('google-auth-library');
 const express = require("express");
 const nunjucks = require("nunjucks");
 const path = require("path");
@@ -7,6 +9,8 @@ const serviceRoutes = require("./js/service_routes");
 const SERVICES = [];
 const app = express();
 const PORT = process.env.PORT || 3000;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '921639641123-44j6hefhg2iobahvm24cdi3u290rabl0.apps.googleusercontent.com';
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // Middleware đọc dữ liệu từ Form POST và JSON
 app.use(express.urlencoded({ extended: true }));
@@ -588,3 +592,4 @@ loadServices()
   .catch((err) => {
     console.error("Không nạp được dịch vụ từ database:", err);
   });
+

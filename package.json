@@ -7,7 +7,7 @@
   "license": "ISC",
   "author": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test",
     "start": "webpack serve --open --config webpack.config.dev.js",
     "build": "webpack --config webpack.config.prod.js"
   },
@@ -25,6 +25,7 @@
     "express": "^4.22.3",
     "express-rate-limit": "^8.7.1",
     "express-session": "^1.19.0",
+    "google-auth-library": "^10.9.1",
     "mysql2": "^3.24.5",
     "nodemailer": "^10.1.0",
     "nunjucks": "^3.2.4",
