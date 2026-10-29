@@ -10,7 +10,7 @@
       <i class="fa-solid fa-cart-shopping me-2" style="color:#ed4690"></i>Giỏ hàng của bạn
     </h2>
     {% if cart and cart | length > 0 %}
-      <span class="badge rounded-pill" style="background: linear-gradient(to right,#ed4690,#5522cc); font-size:1rem;">
+    <span class="badge rounded-pill" style="background: linear-gradient(to right,#ed4690,#5522cc); font-size:1rem;">
         {{ cart | length }} dịch vụ
       </span>
     {% endif %}
@@ -25,77 +25,77 @@
         <div class="card-body p-0">
           <table class="table align-middle mb-0">
             <thead style="background: linear-gradient(to right,#ed4690,#5522cc);">
-              <tr class="text-white">
-                <th class="ps-4 py-3 rounded-top-4">Dịch vụ</th>
-                <th class="text-center py-3">Đơn giá</th>
-                <th class="text-center py-3">Số lượng</th>
-                <th class="text-center py-3">Thành tiền</th>
-                <th class="text-center py-3">Xóa</th>
-              </tr>
+            <tr class="text-white">
+              <th class="ps-4 py-3 rounded-top-4">Dịch vụ</th>
+              <th class="text-center py-3">Đơn giá</th>
+              <th class="text-center py-3">Số lượng</th>
+              <th class="text-center py-3">Thành tiền</th>
+              <th class="text-center py-3">Xóa</th>
+            </tr>
             </thead>
             <tbody>
-              {% for item in cart %}
-              <tr class="border-bottom">
-                <!-- Ảnh + Tên -->
-                <td class="ps-4 py-3">
-                  <div class="d-flex align-items-center gap-3">
-                    <img src="{{ item.img }}" alt="{{ item.name }}"
-                         class="rounded-3 object-fit-cover"
-                         style="width:80px; height:80px;">
-                    <div>
-                      <p class="fw-semibold mb-1">{{ item.name }}</p>
-                      <small class="text-muted">Mã: #{{ item.product_id }}</small>
-                    </div>
+            {% for item in cart %}
+            <tr class="border-bottom">
+              <!-- Ảnh + Tên -->
+              <td class="ps-4 py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <img src="{{ item.img }}" alt="{{ item.name }}"
+                       class="rounded-3 object-fit-cover"
+                       style="width:80px; height:80px;">
+                  <div>
+                    <p class="fw-semibold mb-1">{{ item.name }}</p>
+                    <small class="text-muted">Mã: #{{ item.product_id }}</small>
                   </div>
-                </td>
+                </div>
+              </td>
 
-                <!-- Đơn giá -->
-                <td class="text-center">
+              <!-- Đơn giá -->
+              <td class="text-center">
                   <span class="fw-semibold" style="color:#5522cc;">
                     {{ item.price | int | string | replace(",", ".") }}
                     <!-- Hiển thị đúng định dạng bằng JS bên dưới -->
                   </span>
-                </td>
+              </td>
 
-                <!-- Cập nhật số lượng -->
-                <td class="text-center">
-                  <form action="/cart/update" method="POST" class="d-flex align-items-center justify-content-center gap-1">
-                    <input type="hidden" name="product_id" value="{{ item.product_id }}">
-                    <button type="submit" name="action" value="minus"
-                            class="btn btn-sm btn-outline-secondary rounded-circle"
-                            style="width:30px;height:30px;padding:0;"
-                            {% if item.qty <= 1 %}disabled{% endif %}>
-                      <i class="fa-solid fa-minus" style="font-size:10px;"></i>
-                    </button>
-                    <span class="fw-bold mx-2" style="min-width:24px;">{{ item.qty }}</span>
-                    <button type="submit" name="action" value="plus"
-                            class="btn btn-sm btn-outline-secondary rounded-circle"
-                            style="width:30px;height:30px;padding:0;">
-                      <i class="fa-solid fa-plus" style="font-size:10px;"></i>
-                    </button>
-                  </form>
-                </td>
+              <!-- Cập nhật số lượng -->
+              <td class="text-center">
+                <form action="/cart/update" method="POST" class="d-flex align-items-center justify-content-center gap-1">
+                  <input type="hidden" name="product_id" value="{{ item.product_id }}">
+                  <button type="submit" name="action" value="minus"
+                          class="btn btn-sm btn-outline-secondary rounded-circle"
+                          style="width:30px;height:30px;padding:0;"
+                          {% if item.qty <= 1 %}disabled{% endif %}>
+                  <i class="fa-solid fa-minus" style="font-size:10px;"></i>
+                  </button>
+                  <span class="fw-bold mx-2" style="min-width:24px;">{{ item.qty }}</span>
+                  <button type="submit" name="action" value="plus"
+                          class="btn btn-sm btn-outline-secondary rounded-circle"
+                          style="width:30px;height:30px;padding:0;">
+                    <i class="fa-solid fa-plus" style="font-size:10px;"></i>
+                  </button>
+                </form>
+              </td>
 
-                <!-- Thành tiền -->
-                <td class="text-center fw-bold" style="color:#ed4690;">
+              <!-- Thành tiền -->
+              <td class="text-center fw-bold" style="color:#ed4690;">
                   <span class="item-total" data-price="{{ item.price }}" data-qty="{{ item.qty }}">
                     <!-- Hiển thị bằng JS -->
                   </span>
-                </td>
+              </td>
 
-                <!-- Xóa -->
-                <td class="text-center">
-                  <form action="/cart/remove" method="POST">
-                    <input type="hidden" name="product_id" value="{{ item.product_id }}">
-                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"
-                            style="width:34px;height:34px;padding:0;"
-                            title="Xóa khỏi giỏ">
-                      <i class="fa-solid fa-trash-can" style="font-size:12px;"></i>
-                    </button>
-                  </form>
-                </td>
-              </tr>
-              {% endfor %}
+              <!-- Xóa -->
+              <td class="text-center">
+                <form action="/cart/remove" method="POST">
+                  <input type="hidden" name="product_id" value="{{ item.product_id }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"
+                          style="width:34px;height:34px;padding:0;"
+                          title="Xóa khỏi giỏ">
+                    <i class="fa-solid fa-trash-can" style="font-size:12px;"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
             </tbody>
           </table>
         </div>
@@ -146,8 +146,8 @@
             <span id="total" class="fw-bold fs-5" style="color:#ed4690;"></span>
           </div>
 
-          <!-- Nút đặt hàng → sẽ kết nối với Phát sau -->
-          <a href="/order" class="btn w-100 text-white fw-bold rounded-pill py-2"
+          <!-- Nút đặt hàng → trang thanh toán -->
+          <a href="/checkout" class="btn w-100 text-white fw-bold rounded-pill py-2"
              style="background: linear-gradient(to right,#ed4690,#5522cc);">
             <i class="fa-solid fa-bag-shopping me-2"></i>Tiến hành đặt hàng
           </a>

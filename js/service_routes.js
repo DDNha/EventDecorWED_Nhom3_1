@@ -1,26 +1,27 @@
 const express = require("express");
 const router = express.Router();
 
-// Dữ liệu mẫu khớp với 6 thẻ ở trang chủ.
-// Sau này bạn có thể thay bằng truy vấn database.
-const SERVICES = [];
+// Danh sách sản phẩm (dịch vụ). Được nạp từ bảng `products` trong database bởi app.js.
+const PRODUCTS = [];
 
-function getService(id) {
-  return SERVICES.find((s) => Number(s.id) === id);
+function getProduct(id) {
+  return PRODUCTS.find((p) => Number(p.id) === id);
 }
 
-// GET /services/:id
-router.get("/services/:id", (req, res) => {
+// GET /services/:id  và  /products/:id
+router.get(["/services/:id", "/products/:id"], (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const service = getService(id);
+  const product = getProduct(id);
 
-  if (!service) {
-    return res.status(404).send("Không tìm thấy dịch vụ");
+  if (!product) {
+    return res.status(404).send("Không tìm thấy sản phẩm");
   }
 
-  const related = SERVICES.filter((s) => s.id !== id).slice(0, 3);
-  res.render("service_detail.html", { service, related });
+  const related = PRODUCTS.filter((p) => p.id !== id).slice(0, 3);
+  // Giữ thêm khóa `service` cho template service_detail.html hiện tại
+  res.render("service_detail.html", { product, service: product, related });
 });
 
 module.exports = router;
-module.exports.SERVICES = SERVICES;
+module.exports.PRODUCTS = PRODUCTS;
+module.exports.SERVICES = PRODUCTS; // bí danh tương thích code cũ

@@ -3,14 +3,11 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th10 28, 2026 lúc 02:27 PM
+-- Thời gian đã tạo: Th10 29, 2026 lúc 07:02 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
--- Aiven/MySQL managed có thể yêu cầu khóa chính ngay khi CREATE TABLE,
--- trong khi dump phpMyAdmin thêm khóa chính ở phần ALTER TABLE phía dưới.
-SET SESSION sql_require_primary_key = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -19,12 +16,6 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
-
-CREATE DATABASE IF NOT EXISTS `event_decor`
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE `event_decor`;
 
 --
 -- Cơ sở dữ liệu: `event_decor`
@@ -68,41 +59,24 @@ CREATE TABLE `customer_reviews_featured` (
 
 CREATE TABLE `orders` (
   `id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `partner_id` int(11) DEFAULT NULL,
+  `user_id` int(11) NOT NULL,
   `voucher_id` int(11) DEFAULT NULL,
-  `source_role` enum('customer','partner') NOT NULL DEFAULT 'customer',
   `customer_name` varchar(100) NOT NULL,
-  `customer_phone` varchar(20) DEFAULT NULL,
-  `service_name` varchar(200) DEFAULT NULL,
-  `event_date` date DEFAULT NULL,
-  `event_time` time DEFAULT NULL,
-  `event_location` varchar(255) DEFAULT NULL,
+  `customer_phone` varchar(20) NOT NULL,
+  `event_date` date NOT NULL,
+  `event_time` time NOT NULL,
+  `event_location` varchar(255) NOT NULL,
   `note` text DEFAULT NULL,
-  `total_amount` decimal(15,2) NOT NULL DEFAULT 0,
-  `discount_amount` decimal(15,2) NOT NULL DEFAULT 0,
-  `final_amount` decimal(15,2) NOT NULL DEFAULT 0,
+  `total_amount` int(11) NOT NULL DEFAULT 0,
+  `discount_amount` int(11) NOT NULL DEFAULT 0,
+  `final_amount` int(11) NOT NULL DEFAULT 0,
   `payment_method` varchar(50) DEFAULT NULL,
   `status` enum('pending','approved','processing','completed','rejected','cancelled') NOT NULL DEFAULT 'pending',
-  `commission_rate` decimal(5,2) NOT NULL DEFAULT 10.00,
-  `commission_amount` decimal(15,2) NOT NULL DEFAULT 0,
-  `partner_payout` decimal(15,2) NOT NULL DEFAULT 0,
-  `admin_note` text DEFAULT NULL,
-  `approved_by` int(11) DEFAULT NULL,
-  `approved_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `commission_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `partner_id` int(11) DEFAULT NULL,
+  `partner_payout` decimal(15,2) NOT NULL DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Đơn mẫu tương ứng với dữ liệu order_items bên dưới.
-INSERT INTO `orders`
-(`id`, `user_id`, `source_role`, `customer_name`, `customer_phone`, `service_name`,
- `event_date`, `event_time`, `event_location`, `total_amount`, `final_amount`,
- `payment_method`, `status`, `commission_rate`, `commission_amount`, `partner_payout`)
-VALUES
-(1, 4, 'customer', 'Khách hàng mẫu', '0900000000', 'Đơn nhiều dịch vụ',
- '2026-11-20', '18:00:00', 'TP. Hồ Chí Minh', 5300000, 5300000,
- 'Chuyển khoản', 'completed', 10, 530000, 4770000);
 
 -- --------------------------------------------------------
 
@@ -114,18 +88,18 @@ CREATE TABLE `order_items` (
   `id` int(11) NOT NULL,
   `order_id` int(11) NOT NULL,
   `service_id` int(11) NOT NULL,
-  `title` varchar(255) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
   `image` varchar(255) DEFAULT NULL,
   `partner` varchar(255) DEFAULT NULL,
   `price` bigint(20) NOT NULL,
-  `quantity` int(11) NOT NULL DEFAULT 1
+  `qty` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `order_items`
 --
 
-INSERT INTO `order_items` (`id`, `order_id`, `service_id`, `title`, `image`, `partner`, `price`, `quantity`) VALUES
+INSERT INTO `order_items` (`id`, `order_id`, `service_id`, `title`, `image`, `partner`, `price`, `qty`) VALUES
 (1, 1, 2, 'Gói làm bánh & tiệc cho sự kiện', '/img/BanhvaSuKien.png', 'Bếp Nhà Ngọc', 800000, 1),
 (2, 1, 1, 'Gói trang trí sinh nhật cao cấp', '/img/birthday.png', 'Sắc Màu Decor', 1500000, 1),
 (3, 1, 3, 'Gói MC chuyên nghiệp', '/img/anhMC.png', 'MC Minh Khang', 3000000, 1);
@@ -138,14 +112,12 @@ INSERT INTO `order_items` (`id`, `order_id`, `service_id`, `title`, `image`, `pa
 
 CREATE TABLE `partners` (
   `id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
   `name` varchar(150) NOT NULL,
   `image` varchar(255) DEFAULT NULL,
   `description` text DEFAULT NULL,
   `address` varchar(255) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
-  `email` varchar(160) DEFAULT NULL,
-  `status` enum('active','inactive') NOT NULL DEFAULT 'active',
+  `email` varchar(20) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -156,13 +128,7 @@ CREATE TABLE `partners` (
 INSERT INTO `partners` (`id`, `name`, `image`, `description`, `address`, `phone`, `email`, `created_at`) VALUES
 (1, 'PartyDesign VN', '/img/partners/partydesn.png', 'Đối tác tin cậy của nhiều thương hiệu lớn như Acer, Vietcombank, Pepsico', 'TP. Hồ Chí Minh', '0901234567', 'contact@partydesign.', '2026-10-27 16:07:44'),
 (2, 'HoaBinh Events', '/img/partners/hoabinh.png', 'Đơn vị tổ chức hội nghị, sự kiện và du lịch (MICE) quy mô lớn trên toàn quốc.', 'TP. Hồ Chí Minh', '0912345678', 'info@hoabinh-events.', '2026-10-27 16:07:44'),
-(3, 'Á Châu Event', '/img/partners/achauevent.png', 'Mạnh về tổ chức teambuilding, tiệc cuối năm (YEP) và sự kiện doanh nghiệp.', 'Bình Dương', '0923456789', 'contact@achauevent.com', '2026-10-27 16:07:44'),
-(4, 'Sắc Màu Decor', '/img/PDesigh.png', 'Đơn vị trang trí sinh nhật và sự kiện theo chủ đề.', 'TP. Hồ Chí Minh', '0934000004', 'contact@sacmaudecor.vn', '2026-10-27 16:07:44'),
-(5, 'King Media', '/img/kingMedia.png', 'Dịch vụ chụp ảnh, quay phim và truyền thông sự kiện.', 'TP. Hồ Chí Minh', '0934000005', 'contact@kingmedia.vn', '2026-10-27 16:07:44'),
-(6, 'HBG Event', '/img/HBGevent.png', 'Tổ chức và điều phối sự kiện doanh nghiệp trọn gói.', 'TP. Hồ Chí Minh', '0934000006', 'contact@hbgevent.vn', '2026-10-27 16:07:44'),
-(7, 'Sound & Light Pro', '/img/hero-img.png', 'Cung cấp âm thanh, ánh sáng và sân khấu sự kiện.', 'TP. Hồ Chí Minh', '0934000007', 'contact@soundlight.vn', '2026-10-27 16:07:44'),
-(8, 'Hoa Cưới Việt', '/img/hoaCuoi.png', 'Hoa cưới và phụ kiện hoa cho các dịp đặc biệt.', 'Đồng Nai', '0934000008', 'contact@hoacuoi.vn', '2026-10-27 16:07:44'),
-(9, 'Bếp Nhà Ngọc', '/img/BanhvaSuKien.png', 'Bánh và tiệc nhẹ cho hội thảo, sinh nhật và sự kiện.', 'TP. Hồ Chí Minh', '0934000009', 'contact@bepnhangoc.vn', '2026-10-27 16:07:44');
+(3, 'Á Châu Event', '/img/partners/achauevent.png', 'Mạnh về tổ chức teambuilding, tiệc cuối năm (YEP) và sự kiện doanh nghiệp.', 'Bình Dương', '0923456789', 'contact@achauevent.c', '2026-10-27 16:07:44');
 
 -- --------------------------------------------------------
 
@@ -271,7 +237,7 @@ CREATE TABLE `product_inclusions` (
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `reviews`
+-- Cấu trúc bảng cho bảng `reports`
 --
 
 CREATE TABLE `reports` (
@@ -292,7 +258,10 @@ CREATE TABLE `reports` (
 
 -- --------------------------------------------------------
 
--- Cấu trúc bảng đánh giá
+--
+-- Cấu trúc bảng cho bảng `reviews`
+--
+
 CREATE TABLE `reviews` (
   `id` int(11) NOT NULL,
   `order_id` int(11) NOT NULL,
@@ -316,7 +285,7 @@ CREATE TABLE `review_reports` (
   `review_id` int(11) NOT NULL,
   `reporter_id` int(11) NOT NULL,
   `reason` text NOT NULL,
-  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `status` enum('open','in_progress','resolved','rejected') NOT NULL DEFAULT 'open',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -353,7 +322,6 @@ CREATE TABLE `services` (
   `partner_id` int(11) DEFAULT NULL,
   `includes` text DEFAULT NULL,
   `description` text DEFAULT NULL,
-  `status` enum('pending','active','inactive','rejected') NOT NULL DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -409,26 +377,24 @@ INSERT INTO `specialties` (`id`, `name`) VALUES
 
 CREATE TABLE `user` (
   `id` int(11) NOT NULL,
-  `username` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `full_name` varchar(255) DEFAULT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `role` enum('user','partner','admin') NOT NULL DEFAULT 'user',
-  `status` enum('active','locked') NOT NULL DEFAULT 'active',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `full_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `role` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'user',
+  `status` enum('active','locked') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_esperanto_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `user`
 --
 
-INSERT INTO `user` (`id`, `username`, `email`, `password`, `full_name`, `phone`, `role`) VALUES
-(1, 'User', 'user@gmail.com', '$2b$12$k8df2weR/fKv9/lk.40A1OwV2eNSw1laoPizy3CvuBmSnSXDe4ZMO', NULL, NULL, 'user'),
-(2, 'Bulee', 'bulee012@gmail.com', '$2b$12$sxsIbDy3WFmSq6rLHfznqOM.ZrjrmqdWI4b23Skv1W1iTrDb5DwUa', 'Bluee', '0123456789', 'user'),
-(3, 'Nha', 'dnha012@gmail.com', '$2b$12$0YwmzAoQttnjJPQzFPqsaeghJmuAcSuIt2ldOe0lMEkzhiAO51ZTO', 'dao', '012345678', 'user'),
-(4, 'nhadaoduy01123', 'nhadaoduy01123@gmail.com', '$2b$12$Ly4HI6/r8dhcUBRa8jAIi.BFUtO.vN7wnKSB8.CaKInn4RirPsUia', 'buleee', NULL, 'user');
+INSERT INTO `user` (`id`, `username`, `email`, `password`, `full_name`, `phone`, `role`, `status`) VALUES
+(1, 'User', 'user@gmail.com', 'user', NULL, NULL, 'user', 'active'),
+(4, 'nhadaoduy01123', 'nhadaoduy01123@gmail.com', '$2b$12$Ly4HI6/r8dhcUBRa8jAIi.BFUtO.vN7wnKSB8.CaKInn4RirPsUia', 'Bulee', NULL, 'user', 'active'),
+(6, 'nhadaoduy32', 'nhadaoduy32@gmail.com', '$2b$12$nXRF5AX8CaMgy0.18fYgauNNkGAZV8hIbwRK1UQUhuqTqLiwnmVpO', 'adnimĐây', NULL, 'admin', 'active'),
+(19, 'nhadaoduy0123', 'nhadaoduy0123@gmail.com', '$2b$12$WnZBT8ZRTX8bkY0XqL3HOemymaZKSVeu.deuZFdjNPNPWH.u55Y16', 'kader', NULL, 'user', 'active');
 
 -- --------------------------------------------------------
 
@@ -469,26 +435,20 @@ ALTER TABLE `customer_reviews_featured`
 ALTER TABLE `orders`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`),
-  ADD KEY `partner_id` (`partner_id`),
-  ADD KEY `voucher_id` (`voucher_id`),
-  ADD KEY `approved_by` (`approved_by`),
-  ADD KEY `idx_order_status_created` (`status`,`created_at`);
+  ADD KEY `voucher_id` (`voucher_id`);
 
 --
 -- Chỉ mục cho bảng `order_items`
 --
 ALTER TABLE `order_items`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `order_id` (`order_id`),
-  ADD KEY `service_id` (`service_id`);
+  ADD KEY `order_id` (`order_id`);
 
 --
 -- Chỉ mục cho bảng `partners`
 --
 ALTER TABLE `partners`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `user_id` (`user_id`),
-  ADD KEY `idx_partner_status` (`status`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Chỉ mục cho bảng `partner_payouts`
@@ -532,7 +492,9 @@ ALTER TABLE `product_inclusions`
   ADD PRIMARY KEY (`id`),
   ADD KEY `product_id` (`product_id`);
 
--- Chỉ mục cho bảng phản ánh
+--
+-- Chỉ mục cho bảng `reports`
+--
 ALTER TABLE `reports`
   ADD PRIMARY KEY (`id`),
   ADD KEY `reporter_id` (`reporter_id`),
@@ -568,9 +530,7 @@ ALTER TABLE `saved_products`
 -- Chỉ mục cho bảng `services`
 --
 ALTER TABLE `services`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `partner_id` (`partner_id`),
-  ADD KEY `idx_service_status` (`status`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Chỉ mục cho bảng `specialties`
@@ -584,9 +544,7 @@ ALTER TABLE `specialties`
 --
 ALTER TABLE `user`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `idx_user_role_status` (`role`,`status`);
+  ADD UNIQUE KEY `username` (`username`);
 
 --
 -- Chỉ mục cho bảng `vouchers`
@@ -627,7 +585,7 @@ ALTER TABLE `order_items`
 -- AUTO_INCREMENT cho bảng `partners`
 --
 ALTER TABLE `partners`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `partner_payouts`
@@ -657,10 +615,6 @@ ALTER TABLE `products`
 -- AUTO_INCREMENT cho bảng `product_inclusions`
 --
 ALTER TABLE `product_inclusions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
--- AUTO_INCREMENT cho bảng phản ánh
-ALTER TABLE `reports`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -697,7 +651,7 @@ ALTER TABLE `specialties`
 -- AUTO_INCREMENT cho bảng `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT cho bảng `vouchers`
@@ -713,19 +667,8 @@ ALTER TABLE `vouchers`
 -- Các ràng buộc cho bảng `orders`
 --
 ALTER TABLE `orders`
-  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `orders_ibfk_3` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `orders_ibfk_4` FOREIGN KEY (`approved_by`) REFERENCES `user` (`id`) ON DELETE SET NULL;
-
--- Ràng buộc cho chi tiết đơn hàng
-ALTER TABLE `order_items`
-  ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`);
-
--- Liên kết tài khoản đăng nhập với hồ sơ đối tác
-ALTER TABLE `partners`
-  ADD CONSTRAINT `partners_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
+  ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`id`) ON DELETE SET NULL;
 
 --
 -- Các ràng buộc cho bảng `partner_payouts`
@@ -764,11 +707,6 @@ ALTER TABLE `products`
 ALTER TABLE `product_inclusions`
   ADD CONSTRAINT `product_inclusions_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
--- Ràng buộc cho báo cáo/phản ánh
-ALTER TABLE `reports`
-  ADD CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`reporter_id`) REFERENCES `user` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `reports_ibfk_2` FOREIGN KEY (`handled_by`) REFERENCES `user` (`id`) ON DELETE SET NULL;
-
 --
 -- Các ràng buộc cho bảng `reviews`
 --
@@ -790,10 +728,6 @@ ALTER TABLE `review_reports`
 ALTER TABLE `saved_products`
   ADD CONSTRAINT `saved_products_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `saved_products_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
-
--- Mỗi dịch vụ thuộc một đối tác
-ALTER TABLE `services`
-  ADD CONSTRAINT `services_ibfk_1` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -9,10 +9,9 @@ const { OAuth2Client } = require('google-auth-library');
 const { signInWithGoogle } = require('./js/google_auth');
 const { getDbConfig } = require('./js/db_config');
 const serviceRoutes = require('./js/service_routes');
-const SERVICES = serviceRoutes.SERVICES.map((s) => ({
-  ...s,
-  name: s.title
-}));
+// Dùng chung một mảng với service_routes để trang chi tiết cũng thấy dữ liệu.
+// Dữ liệu được nạp từ bảng `products` trong database (xem loadProducts bên dưới).
+const PRODUCTS = serviceRoutes.PRODUCTS;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +31,12 @@ app.use(session({
 }));
 
 // Phục vụ file tĩnh từ các thư mục css, img, js và public
+// Làm mới danh sách sản phẩm (cache 30 giây) trước khi xử lý các trang
+app.use(async (req, res, next) => {
+  if (req.method === 'GET' && !/^\/(css|img|js)\//.test(req.path)) await loadProducts();
+  next();
+});
+
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/img', express.static(path.join(__dirname, 'img')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
@@ -66,6 +71,43 @@ async function testConnection() {
 
 if (!process.env.SKIP_DATABASE_CONNECTION_TEST) testConnection().then();
 
+// Nạp danh sách sản phẩm từ bảng `products` vào mảng PRODUCTS (ghi đè tại chỗ, giữ nguyên tham chiếu)
+let productsLoadedAt = 0;
+async function loadProducts(force = false) {
+  if (!force && Date.now() - productsLoadedAt < 30 * 1000) return;
+  try {
+    const [rows] = await pool.query('SELECT * FROM products ORDER BY id');
+    PRODUCTS.length = 0;
+    // Hỗ trợ cả cột kiểu mới (title, image, reviews, duration, area, includes)
+    // lẫn kiểu cũ (name, img, reviewsCount, executionTime, location)
+    rows.forEach((p) => {
+      const name = p.title ?? p.name;
+      const image = p.image ?? p.img;
+      PRODUCTS.push({
+        ...p,
+        name,
+        title: name,
+        image,
+        img: image,
+        reviews: p.reviews ?? p.reviewsCount ?? 0,
+        reviewsCount: p.reviewsCount ?? p.reviews ?? 0,
+        duration: p.duration ?? p.executionTime,
+        executionTime: p.executionTime ?? p.duration,
+        area: p.area ?? p.location,
+        location: p.location ?? p.area,
+        includes: typeof p.includes === 'string'
+          ? p.includes.split(/\r?\n/).filter(Boolean)
+          : (p.includes || []),
+        price: Number(p.price),
+        rating: Number(p.rating)
+      });
+    });
+    productsLoadedAt = Date.now();
+  } catch (error) {
+    console.error('Lỗi nạp dịch vụ từ bảng products:', error.message);
+  }
+}
+
 // Middleware kiểm tra xem người dùng đã đăng nhập chưa
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
@@ -84,7 +126,8 @@ app.get('/', async (req, res) => {
   try {
     const [partners] = await pool.query(`SELECT * FROM partners`).catch(() => [[]]);
     res.render('index.html', {
-      services: SERVICES.slice(0, 6),   // chỉ 6 dịch vụ nổi bật
+      products: PRODUCTS.slice(0, 6),
+      services: PRODUCTS.slice(0, 6),   // chỉ 6 dịch vụ nổi bật
       part: partners,
       user: req.session.user || null
     });
@@ -102,7 +145,8 @@ app.get('/about', (req, res) => {
 // Dịch vụ
 app.get('/services', (req, res) => {
   res.render('eventservices.html', {
-    services: SERVICES,                 // hiển thị TẤT CẢ dịch vụ
+    products: PRODUCTS,                 // hiển thị TẤT CẢ sản phẩm
+    services: PRODUCTS,
     user: req.session.user || null
   });
 });
@@ -197,7 +241,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     const [result] = await pool.execute(
       `INSERT INTO \`user\`
-       (username, email, password, full_name, phone, role)
+         (username, email, password, full_name, phone, role)
        VALUES (?, ?, ?, ?, ?, 'user')`,
       [finalUsername, email, passwordHash, fullName, phone || null]
     );
@@ -314,7 +358,7 @@ app.post('/api/auth/login', async (req, res) => {
               full_name, phone, role, status
        FROM \`user\`
        WHERE email = ?
-       LIMIT 1`,
+         LIMIT 1`,
       [email]
     );
 
@@ -500,8 +544,34 @@ app.get('/profile', isAuthenticated, async (req, res) => {
 // ======================================================
 
 function findProduct(productId) {
-  return SERVICES.find(p => p.id === parseInt(productId));
+  return PRODUCTS.find(p => p.id === parseInt(productId));
 }
+
+// Nút "Đặt dịch vụ" ở trang chi tiết: thêm sản phẩm vào giỏ rồi chuyển thẳng sang trang thanh toán
+app.get(['/booking/:id', '/products/:id/book', '/services/:id/book'], isAuthenticated, (req, res) => {
+  const product = findProduct(req.params.id);
+
+  if (!product) {
+    return res.status(404).send('Không tìm thấy sản phẩm.');
+  }
+
+  if (!req.session.cart) {
+    req.session.cart = [];
+  }
+
+  const existing = req.session.cart.find(item => item.product_id === product.id);
+  if (!existing) {
+    req.session.cart.push({
+      product_id: product.id,
+      name:       product.name,
+      price:      product.price,
+      img:        product.image,
+      qty:        1
+    });
+  }
+
+  res.redirect('/checkout');
+});
 
 app.get('/cart', isAuthenticated, (req, res) => {
   const cart = req.session.cart || [];
@@ -589,7 +659,7 @@ app.use("/", serviceRoutes);
 
 // Đặt dịch vụ, thanh toán và lưu đơn hàng vào MySQL
 const checkoutRoutes = require('./js/checkout_routes');
-app.use('/', checkoutRoutes({ pool, SERVICES, isAuthenticated }));
+app.use('/', checkoutRoutes({ pool, PRODUCTS, SERVICES: PRODUCTS, isAuthenticated }));
 
 // Khu vực quản trị và cổng tạo đơn dành cho đối tác
 const createAdminRoutes = require('./js/admin_routes');
@@ -642,8 +712,8 @@ app.get("/partner/:id", async (req, res) => {
       SELECT p.name, p.image, p.description, p.address, p.phone, p.email,
              s.name AS specialty_name
       FROM partners p
-      JOIN partner_specialties ps ON ps.partner_id = p.id
-      JOIN specialties s ON s.id = ps.specialty_id
+             JOIN partner_specialties ps ON ps.partner_id = p.id
+             JOIN specialties s ON s.id = ps.specialty_id
       WHERE p.id = ?`;
     const [rows] = await pool.query(sql, [id]);
     if (rows.length === 0) {
