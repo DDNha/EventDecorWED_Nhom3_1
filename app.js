@@ -2,12 +2,14 @@ const express = require("express");
 const nunjucks = require("nunjucks");
 const path = require("path");
 const session = require("express-session");
+const nodemailer = require("nodemailer");
 const mysql = require("mysql2/promise");
 const serviceRoutes = require("./js/service_routes");
 const SERVICES = [];
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+// Load file .env
+require("dotenv").config();
 // Middleware đọc dữ liệu từ Form POST và JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -260,11 +262,46 @@ app.get("/contact", (req, res) => {
   res.render("contact.html", { user: req.session.user || null });
 });
 
-app.post("/contact", (req, res) => {
-  const { name, phone, email, message } = req.body;
-  console.log("Thông tin liên hệ:", { name, phone, email, message });
-  res.redirect("/contact");
+app.post("/contact", async (req, res) => {
+  try {
+    const { name, phone, email, message } = req.body;
+    let transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
+    await transporter.sendMail({
+      from: process.env.MAIL_USER,
+      to: process.env.MAIL_TO,
+      replyTo: email,
+      subject: `Liên hệ mới từ khách hàng`,
+      text: `Tên khách hàng: ${name}
+      Số điện thoại: ${phone}
+      Email: ${email}
+      Nội dung:${message}`,
+    });
+    const [result] = await pool.execute(
+      `
+      INSERT INTO contacts (full_name, email, phone, message) VALUES (?,?,?,?)`,
+      [name.trim(), phone.trim(), email.trim(), message.trim()],
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Gửi tin nhắn thành công!",
+    });
+  } catch (error) {
+    console.error("Lỗi gửi email contact:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Gửi tin nhắn thất bại. Vui lòng thử lại!",
+    });
+  }
 });
+
 const bcrypt = require("bcryptjs");
 
 // Trang đăng ký
