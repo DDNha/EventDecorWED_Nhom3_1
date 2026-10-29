@@ -141,15 +141,6 @@ app.get('/about', (req, res) => {
   res.render('aboutus.html', { user: req.session.user || null });
 });
 
-// Dịch vụ
-app.get('/services', (req, res) => {
-  res.render('eventservices.html', {
-    products: PRODUCTS,                 // hiển thị TẤT CẢ sản phẩm
-    services: PRODUCTS,
-    user: req.session.user || null
-  });
-});
-
 // Đối tác
 app.get('/partner', async (req, res) => {
   try {
@@ -651,8 +642,8 @@ app.get('/api/cart-count', isAuthenticated, (req, res) => {
 
 // ======================================================
 
-// Chi tiết dịch vụ: /services/:id
-app.use("/", serviceRoutes);
+// Danh sách dịch vụ (tìm kiếm, lọc) và chi tiết dịch vụ: /services, /services/:id
+app.use("/", serviceRoutes({ pool }));
 
 // Đặt dịch vụ, thanh toán và lưu đơn hàng vào MySQL
 const checkoutRoutes = require('./js/checkout_routes');

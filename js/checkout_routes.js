@@ -118,16 +118,31 @@ module.exports = function ({ pool, SERVICES, isAuthenticated }) {
       );
 
       let itemRows = [];
+      let reviewRows = [];
       if (orderRows.length) {
+        const orderIds = orderRows.map((o) => o.id);
         [itemRows] = await pool.query(
-          `SELECT oi.order_id, oi.service_id AS product_id, oi.quantity, oi.price,
-                  s.title, s.image, pt.name AS partner
+          `SELECT oi.order_id, oi.product_id, oi.quantity, oi.price,
+                  p.name AS title, p.img AS image, pt.name AS partner
            FROM order_items oi
-            LEFT JOIN products s  ON s.id = oi.service_id
-           LEFT JOIN partners pt ON pt.id = s.partner_id
+           LEFT JOIN products p  ON p.id = oi.product_id
+           LEFT JOIN partners pt ON pt.id = p.partner_id
            WHERE oi.order_id IN (?)`,
-          [orderRows.map((o) => o.id)]
+          [orderIds]
         );
+        [reviewRows] = await pool.query(
+          `SELECT order_id, product_id, rating_stars, comment
+           FROM reviews
+           WHERE user_id = ? AND order_id IN (?)`,
+          [req.session.user.id, orderIds]
+        );
+      }
+
+      // Gắn đánh giá (nếu có) vào từng dịch vụ trong đơn
+      for (const it of itemRows) {
+        it.review = reviewRows.find(
+          (r) => r.order_id === it.order_id && r.product_id === it.product_id
+        ) || null;
       }
 
       const orders = orderRows.map((o) => {
@@ -135,7 +150,9 @@ module.exports = function ({ pool, SERVICES, isAuthenticated }) {
         return {
           id: o.id,
           createdAt: o.created_at,
+          status: o.status,
           cancelled: o.status === 'cancelled',
+          cancelReason: o.cancel_reason,
           step: o.status === 'completed' ? STEPS.length - 1 : 0,
           subtotal: o.total_amount,
           fee: o.final_amount - (o.total_amount - o.discount_amount),
@@ -155,11 +172,111 @@ module.exports = function ({ pool, SERVICES, isAuthenticated }) {
         orders,
         steps: STEPS,
         newId: parseInt(req.query.new, 10) || null,
+        notice: req.query.notice || '',
+        error: req.query.error || '',
         user: req.session.user
       });
     } catch (err) {
       console.error(err);
       res.status(500).send('Lỗi truy vấn database');
+    }
+  });
+
+  function backToOrders(res, key, message) {
+    res.redirect('/orders?' + key + '=' + encodeURIComponent(message));
+  }
+
+  // ---------- Khách hàng hủy đơn (chỉ khi đơn đang chờ duyệt) ----------
+  router.post('/orders/:id/cancel', isAuthenticated, async (req, res) => {
+    const orderId = parseInt(req.params.id, 10);
+    const reason = String(req.body.cancel_reason || '').trim();
+
+    if (reason.length < 5 || reason.length > 500) {
+      return backToOrders(res, 'error', 'Vui lòng nhập lý do hủy đơn (từ 5 đến 500 ký tự).');
+    }
+
+    try {
+      const [result] = await pool.query(
+        `UPDATE orders SET status = 'cancelled', cancel_reason = ?
+         WHERE id = ? AND user_id = ? AND status = 'pending'`,
+        [reason, orderId, req.session.user.id]
+      );
+      if (!result.affectedRows) {
+        return backToOrders(res, 'error', `Không thể hủy đơn #${orderId}. Chỉ hủy được đơn đang chờ duyệt.`);
+      }
+      backToOrders(res, 'notice', `Đã hủy đơn hàng #${orderId}.`);
+    } catch (err) {
+      console.error('Lỗi hủy đơn hàng:', err);
+      backToOrders(res, 'error', 'Không thể hủy đơn hàng lúc này. Vui lòng thử lại.');
+    }
+  });
+
+  // ---------- Khách hàng đánh giá dịch vụ trong đơn đã hoàn thành ----------
+  router.post('/orders/:id/review', isAuthenticated, async (req, res) => {
+    const orderId = parseInt(req.params.id, 10);
+    const productId = parseInt(req.body.product_id, 10);
+    const stars = parseInt(req.body.rating_stars, 10);
+    const comment = String(req.body.comment || '').trim() || null;
+    const userId = req.session.user.id;
+
+    if (!(stars >= 1 && stars <= 5)) {
+      return backToOrders(res, 'error', 'Vui lòng chọn số sao từ 1 đến 5.');
+    }
+    if (comment && comment.length > 1000) {
+      return backToOrders(res, 'error', 'Nhận xét tối đa 1000 ký tự.');
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      // Đơn phải của khách này, đã hoàn thành và có chứa dịch vụ được đánh giá
+      const [[item]] = await conn.query(
+        `SELECT oi.id
+         FROM orders o
+         JOIN order_items oi ON oi.order_id = o.id
+         WHERE o.id = ? AND o.user_id = ? AND o.status = 'completed' AND oi.product_id = ?
+         LIMIT 1`,
+        [orderId, userId, productId]
+      );
+      if (!item) {
+        await conn.rollback();
+        return backToOrders(res, 'error', 'Chỉ đánh giá được dịch vụ trong đơn hàng đã hoàn thành.');
+      }
+
+      const [[existing]] = await conn.query(
+        'SELECT id FROM reviews WHERE order_id = ? AND user_id = ? AND product_id = ? FOR UPDATE',
+        [orderId, userId, productId]
+      );
+      if (existing) {
+        await conn.rollback();
+        return backToOrders(res, 'error', 'Bạn đã đánh giá dịch vụ này trong đơn hàng.');
+      }
+
+      await conn.query(
+        `INSERT INTO reviews (order_id, user_id, product_id, rating_stars, comment)
+         VALUES (?, ?, ?, ?, ?)`,
+        [orderId, userId, productId, stars, comment]
+      );
+
+      // Tính lại điểm trung bình và số lượt đánh giá của dịch vụ
+      await conn.query(
+        `UPDATE products p
+         JOIN (SELECT product_id, ROUND(AVG(rating_stars), 1) AS avg_stars, COUNT(*) AS total
+               FROM reviews WHERE product_id = ? GROUP BY product_id) r
+           ON r.product_id = p.id
+         SET p.rating = r.avg_stars, p.reviewsCount = r.total`,
+        [productId]
+      );
+
+      await conn.commit();
+      backToOrders(res, 'notice', 'Cảm ơn bạn đã đánh giá dịch vụ!');
+    } catch (err) {
+      await conn.rollback();
+      console.error('Lỗi gửi đánh giá:', err);
+      backToOrders(res, 'error', 'Không thể gửi đánh giá lúc này. Vui lòng thử lại.');
+    } finally {
+      conn.release();
     }
   });
 

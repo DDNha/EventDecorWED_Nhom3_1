@@ -29,6 +29,16 @@
   .od-progress li.current::before { box-shadow: 0 0 0 4px rgba(25, 135, 84, .2); }
 
   .badge-status { font-size: .8rem; padding: 6px 12px; border-radius: 50px; }
+  .od-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .od-review { font-size: .88rem; margin-top: 4px; }
+  .od-stars { color: #f5a623; }
+
+  .od-star-input { display: flex; flex-direction: row-reverse; justify-content: center; gap: 6px; font-size: 1.8rem; }
+  .od-star-input input { display: none; }
+  .od-star-input label { color: #d9d9d9; cursor: pointer; }
+  .od-star-input input:checked ~ label,
+  .od-star-input label:hover,
+  .od-star-input label:hover ~ label { color: #f5a623; }
   @media (max-width: 575px) {
     .od-item { flex-direction: column; align-items: flex-start; }
     .od-item img { width: 100%; }
@@ -43,6 +53,13 @@
   <div class="alert alert-success" role="alert">
     Đặt hàng thành công. Đơn hàng #{{ newId }} đã được gửi tới các đối tác.
   </div>
+  {% endif %}
+
+  {% if notice %}
+  <div class="alert alert-success" role="alert">{{ notice }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="alert alert-danger" role="alert">{{ error }}</div>
   {% endif %}
 
   {% if not orders.length %}
@@ -76,6 +93,21 @@
         <div class="fw-semibold text-body">{{ it.title }}</div>
         {% if it.partner %}<div>Đối tác: {{ it.partner }}</div>{% endif %}
         <div>{{ it.price | vnd }} ₫ x {{ it.quantity }}</div>
+        {% if o.status == 'completed' %}
+          {% if it.review %}
+          <div class="od-review">
+            <span class="od-stars">{% for i in range(1, 6) %}<i class="{% if i <= it.review.rating_stars %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i>{% endfor %}</span>
+            <span class="text-success ms-1">Đã đánh giá</span>
+            {% if it.review.comment %}<div class="text-secondary">“{{ it.review.comment }}”</div>{% endif %}
+          </div>
+          {% else %}
+          <button type="button" class="btn btn-sm btn-outline-danger rounded-pill mt-2"
+                  data-bs-toggle="modal" data-bs-target="#reviewModal"
+                  data-order-id="{{ o.id }}" data-product-id="{{ it.product_id }}" data-title="{{ it.title }}">
+            <i class="fa-regular fa-star me-1"></i>Đánh giá
+          </button>
+          {% endif %}
+        {% endif %}
       </div>
       <div class="od-price">{{ (it.price * it.quantity) | vnd }} ₫</div>
     </div>
@@ -87,6 +119,7 @@
       <div>Địa điểm: {{ o.address }}</div>
       <div>Thanh toán: {{ o.method }}</div>
       {% if o.note %}<div>Ghi chú: {{ o.note }}</div>{% endif %}
+      {% if o.cancelled and o.cancelReason %}<div class="text-danger">Lý do hủy: {{ o.cancelReason }}</div>{% endif %}
       <div class="mt-2">Tạm tính: {{ o.subtotal | vnd }} ₫ · Phí dịch vụ: {{ o.fee | vnd }} ₫</div>
       <div class="od-price fs-5">Tổng cộng: {{ o.total | vnd }} VNĐ</div>
     </div>
@@ -102,12 +135,91 @@
     {% endif %}
 
     {% if not o.cancelled and o.step < steps.length - 1 %}
-    <!-- Nút thử giao diện: xoá khi đã có trang cho đối tác/admin -->
-    <form method="post" action="/orders/{{ o.id }}/advance" class="mt-3 text-end">
-      <button class="btn btn-sm btn-outline-secondary" type="submit">Đánh dấu hoàn thành (demo)</button>
-    </form>
+    <div class="od-actions">
+      {% if o.status == 'pending' %}
+      <button type="button" class="btn btn-sm btn-outline-danger"
+              data-bs-toggle="modal" data-bs-target="#cancelModal" data-order-id="{{ o.id }}">
+        Hủy đơn hàng
+      </button>
+      {% endif %}
+      <!-- Nút thử giao diện: xoá khi đã có trang cho đối tác/admin -->
+      <form method="post" action="/orders/{{ o.id }}/advance">
+        <button class="btn btn-sm btn-outline-secondary" type="submit">Đánh dấu hoàn thành (demo)</button>
+      </form>
+    </div>
     {% endif %}
   </article>
   {% endfor %}
 </div>
+
+<!-- Hộp thoại hủy đơn -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" id="cancelForm">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5 fw-bold" id="cancelModalTitle">Hủy đơn hàng #<span id="cancelOrderId"></span></h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary">Đơn hàng sau khi hủy sẽ không thể khôi phục.</p>
+        <label for="cancelReason" class="form-label fw-semibold">Lý do hủy đơn</label>
+        <textarea class="form-control" id="cancelReason" name="cancel_reason" rows="3"
+                  minlength="5" maxlength="500" required
+                  placeholder="Ví dụ: Thay đổi ngày tổ chức, đặt nhầm dịch vụ..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Quay lại</button>
+        <button type="submit" class="btn btn-danger rounded-pill px-4">Xác nhận hủy</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Hộp thoại đánh giá dịch vụ -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" id="reviewForm">
+      <input type="hidden" name="product_id" id="reviewProductId">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5 fw-bold" id="reviewModalTitle">Đánh giá dịch vụ</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body">
+        <p class="fw-semibold text-center mb-2" id="reviewServiceTitle"></p>
+        <div class="od-star-input mb-3" role="radiogroup" aria-label="Số sao">
+          {% for i in [5, 4, 3, 2, 1] %}
+          <input type="radio" name="rating_stars" id="star{{ i }}" value="{{ i }}" required>
+          <label for="star{{ i }}" title="{{ i }} sao"><i class="fa-solid fa-star"></i></label>
+          {% endfor %}
+        </div>
+        <label for="reviewComment" class="form-label fw-semibold">Nhận xét (không bắt buộc)</label>
+        <textarea class="form-control" id="reviewComment" name="comment" rows="3" maxlength="1000"
+                  placeholder="Chia sẻ trải nghiệm của bạn về dịch vụ..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+        <button type="submit" class="btn btn-danger rounded-pill px-4">Gửi đánh giá</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Điền đơn hàng / dịch vụ được chọn vào hộp thoại trước khi mở
+  document.getElementById('cancelModal').addEventListener('show.bs.modal', function (e) {
+    var id = e.relatedTarget.dataset.orderId;
+    document.getElementById('cancelOrderId').textContent = id;
+    document.getElementById('cancelForm').action = '/orders/' + id + '/cancel';
+    document.getElementById('cancelReason').value = '';
+  });
+
+  document.getElementById('reviewModal').addEventListener('show.bs.modal', function (e) {
+    var btn = e.relatedTarget;
+    var form = document.getElementById('reviewForm');
+    form.reset();
+    form.action = '/orders/' + btn.dataset.orderId + '/review';
+    document.getElementById('reviewProductId').value = btn.dataset.productId;
+    document.getElementById('reviewServiceTitle').textContent = btn.dataset.title;
+  });
+</script>
 {% endblock content %}
