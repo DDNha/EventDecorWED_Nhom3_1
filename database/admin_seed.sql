@@ -41,7 +41,7 @@ ON DUPLICATE KEY UPDATE
 
 SET @partner_party := (SELECT id FROM partners WHERE user_id = @partner_party_user LIMIT 1);
 SET @partner_media := (SELECT id FROM partners WHERE user_id = @partner_media_user LIMIT 1);
-SET @service_id := (SELECT id FROM services ORDER BY id LIMIT 1);
+SET @service_id := (SELECT id FROM products ORDER BY id LIMIT 1);
 
 -- 3. Xóa riêng dữ liệu seed cũ để chạy lại không bị trùng
 DELETE oi
