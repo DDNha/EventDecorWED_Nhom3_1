@@ -7,8 +7,14 @@
   "license": "ISC",
   "author": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack serve --open --config webpack.config.dev.js",
+    "test": "node --check app.js && node --check js/admin_routes.js && node --check js/checkout_routes.js && node scripts/validate-templates.js",
+    "start": "node app.js",
+    "dev": "node app.js",
+    "frontend": "webpack serve --open --config webpack.config.dev.js",
+    "db:setup": "node scripts/setup-database.js",
+    "db:seed-admin": "node scripts/seed-admin.js",
+    "sql:validate": "node scripts/validate-sql.js",
+    "make-admin": "node scripts/make-admin.js",
     "build": "webpack --config webpack.config.prod.js"
   },
   "devDependencies": {

@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require("express");
 const nunjucks = require("nunjucks");
 const path = require("path");
 const session = require("express-session");
 const mysql = require("mysql2/promise");
+const { getDbConfig } = require('./js/db_config');
 const serviceRoutes = require("./js/service_routes");
 const SERVICES = [];
 const app = express();
@@ -14,7 +16,7 @@ app.use(express.json());
 
 // Cấu hình Express Session
 app.use(session({
-  secret: 'chuoi_bi_mat_rat_an_toan',
+  secret: process.env.SESSION_SECRET || 'eventdecor-development-secret-change-me',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 1000 * 60 * 60 * 24 } // Phiên tồn tại trong 1 ngày
@@ -37,10 +39,7 @@ env.addFilter('vnd', (n) => Number(n).toLocaleString('vi-VN'));
 
 // Kết nối SQL (Pool)
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '', // Điền mật khẩu MySQL của bạn nếu có
-  database: 'event_decor', // Tên database của bạn
+  ...getDbConfig(),
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -48,7 +47,8 @@ const pool = mysql.createPool({
 
 async function testConnection() {
   try {
-    await pool.getConnection();
+    const connection = await pool.getConnection();
+    connection.release();
     console.log('Kết nối MySQL thành công!');
   } catch (error) {
     console.error('Lỗi kết nối MySQL:', error);
@@ -288,7 +288,7 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const [rows] = await pool.execute(
       `SELECT id, username, email, password,
-              full_name, phone, role
+              full_name, phone, role, status
        FROM \`user\`
        WHERE email = ?
        LIMIT 1`,
@@ -306,6 +306,12 @@ app.post('/api/auth/login', async (req, res) => {
 
     const account = rows[0];
 
+    if (account.status === 'locked') {
+      return res.status(403).json({
+        message: 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.'
+      });
+    }
+
     // Tạo session đăng nhập, không lưu mật khẩu vào session
     req.session.user = {
       id: account.id,
@@ -318,7 +324,9 @@ app.post('/api/auth/login', async (req, res) => {
 
     return res.json({
       message: 'Đăng nhập thành công!',
-      redirect: '/'
+      redirect: account.role === 'admin'
+        ? '/admin'
+        : account.role === 'partner' ? '/partner/orders/new' : '/'
     });
 
   } catch (error) {
@@ -396,6 +404,47 @@ app.get('/logout', (req, res) => {
 // API lấy thông tin user đang đăng nhập
 app.get('/api/current-user', isAuthenticated, (req, res) => {
   res.json({ user: req.session.user });
+});
+
+// Trung tâm báo cáo/phản ánh dành cho khách hàng và đối tác
+app.get('/report', isAuthenticated, (req, res) => {
+  res.render('report.html', {
+    user: req.session.user,
+    success: req.query.success || '',
+    error: null
+  });
+});
+
+app.post('/report', isAuthenticated, async (req, res) => {
+  const subject = String(req.body.subject || '').trim();
+  const content = String(req.body.content || '').trim();
+  const category = String(req.body.category || 'Khác').trim();
+  const orderId = req.body.order_id ? Number(req.body.order_id) : null;
+
+  if (subject.length < 3 || content.length < 10) {
+    return res.status(400).render('report.html', {
+      user: req.session.user,
+      success: '',
+      error: 'Vui lòng nhập tiêu đề và nội dung phản ánh chi tiết hơn.'
+    });
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO reports (reporter_id, reporter_role, order_id, subject, category, content)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [req.session.user.id, req.session.user.role === 'partner' ? 'partner' : 'user', Number.isFinite(orderId) ? orderId : null,
+        subject, category, content]
+    );
+    res.redirect('/report?success=' + encodeURIComponent('Phản ánh đã được gửi. Quản trị viên sẽ tiếp nhận và phản hồi sớm.'));
+  } catch (error) {
+    console.error('Lỗi gửi phản ánh:', error);
+    res.status(500).render('report.html', {
+      user: req.session.user,
+      success: '',
+      error: 'Không thể gửi phản ánh lúc này. Vui lòng thử lại.'
+    });
+  }
 });
 
 app.get('/profile', isAuthenticated, async (req, res) => {
@@ -515,9 +564,19 @@ app.get('/api/cart-count', isAuthenticated, (req, res) => {
 // Chi tiết dịch vụ: /services/:id
 app.use("/", serviceRoutes);
 
-// Đặt dịch vụ, thanh toán, lịch sử đơn hàng: /booking/:id, /orders
-const bookingRoutes = require('./js/booking_routes');
-app.use('/', bookingRoutes);
+// Đặt dịch vụ, thanh toán và lưu đơn hàng vào MySQL
+const checkoutRoutes = require('./js/checkout_routes');
+app.use('/', checkoutRoutes({ pool, SERVICES, isAuthenticated }));
+
+// Khu vực quản trị và cổng tạo đơn dành cho đối tác
+const createAdminRoutes = require('./js/admin_routes');
+app.use('/', createAdminRoutes({ pool }));
+
+app.use((error, req, res, next) => {
+  console.error('Lỗi xử lý yêu cầu:', error);
+  if (res.headersSent) return next(error);
+  res.status(500).send('Hệ thống đang gặp lỗi. Vui lòng kiểm tra database hoặc thử lại sau.');
+});
 
 loadServices()
   .then(() => {
