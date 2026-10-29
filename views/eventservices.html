@@ -6,14 +6,18 @@
   <h1 class="fw-bold text-white">Dịch vụ</h1>
 </div>
 {% endblock header %} {% block content %}
-<!-- Thanh tìm kiếm + bộ lọc -->
-<div class="container mb-4 mt-4">
+<!-- Thanh tìm kiếm + bộ lọc (gửi lên server để truy vấn database) -->
+<form class="container mb-4 mt-4" id="serviceFilter" method="GET" action="/services">
+  <input type="hidden" name="category" id="categoryInput" value="{{ filters.category }}" />
+  <input type="hidden" name="price" id="priceInput" value="{{ filters.price }}" />
   <div class="row align-items-center justify-content-between g-3">
     <div class="col-lg-6 col-md-6">
       <div class="search-container position-relative">
         <input
           type="text"
           id="serviceSearch"
+          name="q"
+          value="{{ filters.q }}"
           class="form-control search-input ps-4"
           placeholder="Tìm kiếm dịch vụ..."
           aria-label="Tìm kiếm dịch vụ"
@@ -32,12 +36,13 @@
           data-bs-toggle="dropdown"
           aria-expanded="false"
         >
-          Loại dịch vụ
+          {{ filters.category or "Loại dịch vụ" }}
         </button>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="#">Trang trí sự kiện</a></li>
-          <li><a class="dropdown-item" href="#">Âm thanh - Ánh sáng</a></li>
-          <li><a class="dropdown-item" href="#">Nhân sự sự kiện</a></li>
+        <ul class="dropdown-menu" id="categoryMenu">
+          <li><a class="dropdown-item" href="#" data-value="">Tất cả loại dịch vụ</a></li>
+          {% for c in categories %}
+          <li><a class="dropdown-item" href="#" data-value="{{ c }}">{{ c }}</a></li>
+          {% endfor %}
         </ul>
       </div>
     </div>
@@ -51,38 +56,30 @@
           data-bs-toggle="dropdown"
           aria-expanded="false"
         >
-          Mức giá
+          {{ priceRanges[filters.price].label if filters.price else "Mức giá" }}
         </button>
         <ul class="dropdown-menu" id="priceMenu">
           <li>
-            <a class="dropdown-item" href="#" data-range="all"
+            <a class="dropdown-item" href="#" data-value=""
               >Tất cả mức giá</a
             >
           </li>
+          {% for key, r in priceRanges %}
           <li>
-            <a class="dropdown-item" href="#" data-range="low">Dưới 1 triệu</a>
+            <a class="dropdown-item" href="#" data-value="{{ key }}">{{ r.label }}</a>
           </li>
-          <li>
-            <a class="dropdown-item" href="#" data-range="mid">1 - 3 triệu</a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="#" data-range="high">Trên 3 triệu</a>
-          </li>
+          {% endfor %}
         </ul>
       </div>
     </div>
   </div>
-</div>
+</form>
 
 <!-- Danh sách dịch vụ -->
 <div class="container mb-5">
   <div class="row g-4" id="serviceGrid">
     {% for s in services %}
-    <div
-      class="col-12 col-sm-6 col-lg-4 service-col"
-      data-title="{{ s.title | lower }}"
-      data-price="{{ s.price }}"
-    >
+    <div class="col-12 col-sm-6 col-lg-4 service-col">
       <article class="service-card">
         <img class="thumb" src="{{ s.image }}" alt="{{ s.title }}" />
         <div class="body">
@@ -100,61 +97,34 @@
       </article>
     </div>
     {% else %}
-    <div class="col-12 text-center text-muted">Chưa có dịch vụ nào.</div>
+    <div class="col-12 text-center text-muted">
+      {% if filters.q or filters.category or filters.price %}
+      Không tìm thấy dịch vụ phù hợp. Hãy thử từ khóa hoặc mức giá khác.
+      {% else %}
+      Chưa có dịch vụ nào.
+      {% endif %}
+    </div>
     {% endfor %}
   </div>
-
-  <p
-    id="serviceEmpty"
-    class="text-center text-muted mt-4"
-    style="display: none"
-  >
-    Không tìm thấy dịch vụ phù hợp. Hãy thử từ khóa hoặc mức giá khác.
-  </p>
 </div>
 
 <script>
-  var searchInput = document.getElementById("serviceSearch");
-  var priceBtn = document.getElementById("priceBtn");
-  var currentRange = "all";
+  var filterForm = document.getElementById("serviceFilter");
 
-  function inRange(price, range) {
-    if (range === "low") return price < 1000000;
-    if (range === "mid") return price >= 1000000 && price <= 3000000;
-    if (range === "high") return price > 3000000;
-    return true;
-  }
-
-  // Áp dụng đồng thời ô tìm kiếm và mức giá
-  function applyFilter() {
-    var kw = searchInput.value.trim().toLowerCase();
-    var shown = 0;
-
-    document.querySelectorAll(".service-col").forEach(function (col) {
-      var okName = col.dataset.title.indexOf(kw) !== -1;
-      var okPrice = inRange(parseInt(col.dataset.price, 10), currentRange);
-      var show = okName && okPrice;
-      col.style.display = show ? "" : "none";
-      if (show) shown++;
-    });
-
-    document.getElementById("serviceEmpty").style.display = shown
-      ? "none"
-      : "block";
-  }
-
-  searchInput.addEventListener("input", applyFilter);
-
-  document
-    .querySelectorAll("#priceMenu .dropdown-item")
-    .forEach(function (item) {
-      item.addEventListener("click", function (e) {
-        e.preventDefault();
-        currentRange = item.dataset.range;
-        priceBtn.textContent =
-          currentRange === "all" ? "Mức giá" : item.textContent;
-        applyFilter();
+  // Chọn loại dịch vụ / mức giá thì gửi form để lọc lại từ database
+  function bindMenu(menuId, inputId) {
+    document
+      .querySelectorAll("#" + menuId + " .dropdown-item")
+      .forEach(function (item) {
+        item.addEventListener("click", function (e) {
+          e.preventDefault();
+          document.getElementById(inputId).value = item.dataset.value;
+          filterForm.submit();
+        });
       });
-    });
+  }
+
+  bindMenu("categoryMenu", "categoryInput");
+  bindMenu("priceMenu", "priceInput");
 </script>
 {% endblock content %}

@@ -218,6 +218,7 @@ CREATE TABLE orders (
         'completed',
         'cancelled'
     ) NOT NULL DEFAULT 'pending',
+    cancel_reason TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id)
