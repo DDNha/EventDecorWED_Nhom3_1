@@ -76,7 +76,6 @@ function isAuthenticated(req, res, next) {
   }
   res.redirect("/login");
 }
-
 // ================= ---------------- ROUTES ---------------- =================
 
 // Trang chủ
@@ -167,7 +166,7 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     // Kiểm tra email đã được sử dụng chưa
     const [existing] = await pool.execute(
-      'SELECT id FROM `user` WHERE email = ? LIMIT 1',
+      'SELECT id FROM `users` WHERE email = ? LIMIT 1',
       [email]
     );
 
@@ -182,7 +181,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     // Kiểm tra username trùng
     const [existingUsername] = await pool.execute(
-      'SELECT id FROM `user` WHERE username = ? LIMIT 1',
+      'SELECT id FROM `users` WHERE username = ? LIMIT 1',
       [finalUsername]
     );
 
@@ -196,10 +195,8 @@ app.post('/api/auth/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
 
     const [result] = await pool.execute(
-      `INSERT INTO \`user\`
-       (username, email, password, full_name, phone, role)
-       VALUES (?, ?, ?, ?, ?, 'user')`,
-      [finalUsername, email, passwordHash, fullName, phone || null]
+      'INSERT INTO `users` (username, email, password) VALUES (?, ?, ?)',
+      [finalUsername, email, passwordHash]
     );
 
     return res.status(201).json({
@@ -242,22 +239,21 @@ app.post('/api/auth/google', async (req, res) => {
       repository: {
         async findByEmail(email) {
           const [accounts] = await pool.execute(
-            `SELECT id, username, email, full_name, phone, role
-             FROM \`user\` WHERE email = ? LIMIT 1`, [email]
+            'SELECT id, username, email FROM `users` WHERE email = ? LIMIT 1', [email]
           );
           return accounts[0] || null;
         },
         async findByUsername(username) {
           const [accounts] = await pool.execute(
-            'SELECT id FROM `user` WHERE username = ? LIMIT 1', [username]
+            'SELECT id FROM `users' +
+            '` WHERE username = ? LIMIT 1', [username]
           );
           return accounts[0] || null;
         },
         async createUser(user) {
           await pool.execute(
-            `INSERT INTO \`user\` (username, email, password, full_name, role)
-             VALUES (?, ?, ?, ?, 'user')`,
-            [user.username, user.email, user.password, user.fullName]
+            'INSERT INTO `users` (username, email, password) VALUES (?, ?, ?)',
+            [user.username, user.email, user.password]
           );
         }
       },
@@ -268,9 +264,9 @@ app.post('/api/auth/google', async (req, res) => {
       id: account.id,
       username: account.username,
       email: account.email,
-      full_name: account.full_name,
-      phone: account.phone,
-      role: account.role
+      full_name: account.full_name || account.username,
+      phone: account.phone || null,
+      role: account.role || 'user'
     };
 
     return req.session.save((error) => {
@@ -310,9 +306,8 @@ app.post('/api/auth/login', async (req, res) => {
 
   try {
     const [rows] = await pool.execute(
-      `SELECT id, username, email, password,
-              full_name, phone, role, status
-       FROM \`user\`
+      `SELECT id, username, email, password
+       FROM \`users\`
        WHERE email = ?
        LIMIT 1`,
       [email]
@@ -340,9 +335,9 @@ app.post('/api/auth/login', async (req, res) => {
       id: account.id,
       username: account.username,
       email: account.email,
-      full_name: account.full_name,
-      phone: account.phone,
-      role: account.role
+      full_name: account.full_name || account.username,
+      phone: account.phone || null,
+      role: account.role || 'user'
     };
 
     return res.json({
@@ -375,7 +370,7 @@ app.put('/api/auth/profile', isAuthenticated, async (req, res) => {
 
   try {
     const [result] = await pool.execute(
-      `UPDATE \`user\`
+      `UPDATE \`users\`
        SET full_name = ?, phone = ?
        WHERE id = ?`,
       [fullName, phone || null, userId]
