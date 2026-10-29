@@ -8,7 +8,8 @@ const serviceRoutes = require("./js/service_routes");
 const SERVICES = [];
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+// Load file .env
+require("dotenv").config();
 // Middleware đọc dữ liệu từ Form POST và JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -269,25 +270,36 @@ app.post("/contact", async (req, res) => {
       port: 465,
       secure: true,
       auth: {
-        user: "mphuc454@gmail.com", //nhập email của bạn
-        pass: "mnzw pznk otxa jucx", //nhập pass của bạn,
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
       },
     });
     await transporter.sendMail({
-      from: "mphuc454@gmail.com",
-      to: "22130215@st.hcmuaf.edu.vn",
+      from: process.env.MAIL_USER,
+      to: process.env.MAIL_TO,
       replyTo: email,
-      subject: `Liên hệ mới từ khách hàng ${name}`,
+      subject: `Liên hệ mới từ khách hàng`,
       text: `Tên khách hàng: ${name}
       Số điện thoại: ${phone}
       Email: ${email}
       Nội dung:${message}`,
     });
+    const [result] = await pool.execute(
+      `
+      INSERT INTO contacts (full_name, email, phone, message) VALUES (?,?,?,?)`,
+      [name.trim(), phone.trim(), email.trim(), message.trim()],
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Gửi tin nhắn thành công!",
+    });
   } catch (error) {
     console.error("Lỗi gửi email contact:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Gửi tin nhắn thất bại. Vui lòng thử lại!",
+    });
   }
-  console.log("Thông tin liên hệ:", { name, phone, email, message });
-  res.redirect("/contact");
 });
 
 const bcrypt = require("bcryptjs");

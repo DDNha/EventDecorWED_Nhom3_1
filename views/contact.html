@@ -177,7 +177,44 @@ header %}
       return;
     }
     const btn = document.getElementById("btn-submit");
+    btn.disabled = true;
     btn.textContent = "Đang gửi...";
+    formAlert.className = "";
+    formAlert.textContent = "";
+    try {
+      const response = await fetch("/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: nameInput.value.trim(),
+          phone: phoneInput.value.trim(),
+          email: emailInput.value.trim(),
+          message: messageInput.value.trim(),
+        }),
+      });
+      const data = await response.json();
+      formAlert.className = data.success
+        ? "alert alert-success fw-bold"
+        : "alert alert-danger fw-bold";
+
+      formAlert.textContent = data.message;
+      if (data.success) {
+        form.reset();
+        nameError.textContent = "";
+        phoneError.textContent = "";
+        emailError.textContent = "";
+        messageError.textContent = "";
+      }
+    } catch (error) {
+      console.error("Lỗi gửi form:", error);
+      formAlert.className = "alert alert-danger fw-bold";
+      formAlert.textContent = "Lỗi kết nối máy chủ. Vui lòng thử lại.";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Gửi tin nhắn";
+    }
   });
 </script>
 {% endblock content %}
