@@ -126,15 +126,6 @@ app.get('/about', (req, res) => {
   res.render('aboutus.html', { user: req.session.user || null });
 });
 
-// Dịch vụ
-app.get('/services', (req, res) => {
-  res.render('eventservices.html', {
-    products: PRODUCTS,                 // hiển thị TẤT CẢ sản phẩm
-    services: PRODUCTS,
-    user: req.session.user || null
-  });
-});
-
 // Đối tác
 app.get('/partner', async (req, res) => {
   try {

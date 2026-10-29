@@ -36,6 +36,12 @@
   .sd-related .name { font-weight: 600; margin-top: 8px; }
   .sd-related .price { color: #dc3545; font-weight: 600; }
   .sd-related a:hover .name { color: #dc3545; }
+
+  .sd-review { padding: 14px 0; border-bottom: 1px solid #f0f0f0; max-width: 75ch; }
+  .sd-review:last-child { border-bottom: 0; }
+  .sd-review .stars { color: #f5a623; font-size: .9rem; }
+  .sd-review .date { color: #6c757d; font-size: .85rem; margin-left: 8px; }
+  .sd-review .reply { background: #f8f9fa; border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: .92rem; }
 </style>
 
 <div class="container sd-wrap">
@@ -86,6 +92,7 @@
   </div>
 
   <!-- Gói bao gồm -->
+  {% if service.includes.length %}
   <section class="sd-section">
     <h2>Gói bao gồm</h2>
     <ul class="sd-list">
@@ -94,11 +101,34 @@
       {% endfor %}
     </ul>
   </section>
+  {% endif %}
 
   <!-- Mô tả -->
   <section class="sd-section">
     <h2>Mô tả chi tiết</h2>
     <p class="sd-desc">{{ service.description }}</p>
+  </section>
+
+  <!-- Đánh giá của khách hàng -->
+  <section class="sd-section">
+    <h2>Đánh giá ({{ reviews.length }})</h2>
+    {% for r in reviews %}
+    <div class="sd-review">
+      <div>
+        <strong>{{ r.username or "Khách hàng" }}</strong>
+        <span class="date">{{ r.created_at.toLocaleDateString('vi-VN') }}</span>
+      </div>
+      <div class="stars" aria-label="{{ r.rating_stars }} sao">
+        {% for i in range(1, 6) %}<i class="{% if i <= r.rating_stars %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i>{% endfor %}
+      </div>
+      {% if r.comment %}<div class="mt-1">{{ r.comment }}</div>{% endif %}
+      {% if r.partner_reply %}
+      <div class="reply"><strong>Phản hồi của đối tác:</strong> {{ r.partner_reply }}</div>
+      {% endif %}
+    </div>
+    {% else %}
+    <p class="text-muted">Chưa có đánh giá nào cho dịch vụ này.</p>
+    {% endfor %}
   </section>
 
   <!-- Dịch vụ khác -->
