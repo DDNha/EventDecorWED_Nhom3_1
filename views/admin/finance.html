@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+{% block title %}Thu chi & hoa hồng{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">TÀI CHÍNH ĐỐI SOÁT</p><h1>Thu chi & hoa hồng</h1><p>Tổng hợp dòng tiền từ các đơn đã được admin duyệt.</p></div></div>
+<section class="metric-grid">
+  <article class="metric-card accent-blue"><span>Tổng thu</span><strong class="money-value">{{ summary.gross }}</strong><small>{{ summary.order_count }} đơn hợp lệ</small></article><article class="metric-card accent-orange"><span>Chi trả đối tác</span><strong class="money-value">{{ summary.payout }}</strong><small>Giá trị đối soát dự kiến</small></article><article class="metric-card accent-green"><span>Hoa hồng nền tảng</span><strong class="money-value">{{ summary.commission }}</strong><small>Phần EventDecor giữ lại</small></article><article class="metric-card"><span>Đã thu từ đơn hoàn thành</span><strong class="money-value">{{ summary.collected }}</strong><small>Dòng tiền đã hoàn tất</small></article>
+</section>
+<section class="dashboard-grid equal">
+  <article class="panel"><div class="panel-head"><div><h2>Đối soát theo đối tác</h2><p>Doanh số và hoa hồng lũy kế</p></div></div><div class="table-wrap"><table><thead><tr><th>Đối tác</th><th>Đơn</th><th>Doanh số</th><th>Hoa hồng</th><th>Phải trả</th></tr></thead><tbody>{% for partner in partners %}<tr><td><b>{{ partner.name }}</b></td><td>{{ partner.order_count }}</td><td class="amount">{{ partner.gross_text }}</td><td class="amount positive">{{ partner.commission_text }}</td><td class="amount">{{ partner.payout_text }}</td></tr>{% else %}<tr><td colspan="5" class="empty-cell">Chưa có dữ liệu đối tác.</td></tr>{% endfor %}</tbody></table></div></article>
+  <article class="panel"><div class="panel-head"><div><h2>Sổ giao dịch gần đây</h2><p>30 đơn gần nhất đã được duyệt</p></div></div><div class="table-wrap"><table><thead><tr><th>Đơn</th><th>Đối tác</th><th>Tổng thu</th><th>Hoa hồng</th><th>Trạng thái</th></tr></thead><tbody>{% for item in transactions %}<tr><td><b>#{{ item.id }}</b><small class="block">{{ item.created_text }}</small></td><td>{{ item.partner_name }}</td><td class="amount">{{ item.gross_text }}</td><td class="amount positive">{{ item.commission_text }}</td><td><span class="status status-{{ item.status }}">{{ item.status_label }}</span></td></tr>{% else %}<tr><td colspan="5" class="empty-cell">Chưa có giao dịch.</td></tr>{% endfor %}</tbody></table></div></article>
+</section>
+{% endblock %}
+

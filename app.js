@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const nodemailer = require("nodemailer");
 const nunjucks = require("nunjucks");
 const path = require("path");
 const session = require("express-session");
@@ -7,6 +8,7 @@ const mysql = require("mysql2/promise");
 const bcrypt = require("bcryptjs");
 const { OAuth2Client } = require("google-auth-library");
 const { signInWithGoogle } = require("./js/google_auth");
+const { getDbConfig } = require("./js/db_config");
 const serviceRoutes = require("./js/service_routes");
 const SERVICES = serviceRoutes.SERVICES.map((s) => ({
   ...s,
@@ -27,7 +29,8 @@ app.use(express.json());
 // Cấu hình Express Session
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "chuoi_bi_mat_rat_an_toan",
+    secret:
+      process.env.SESSION_SECRET || "eventdecor-development-secret-change-me",
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 1000 * 60 * 60 * 24 }, // Phiên tồn tại trong 1 ngày
@@ -51,11 +54,7 @@ env.addFilter("vnd", (n) => Number(n).toLocaleString("vi-VN"));
 
 // Kết nối SQL (Pool)
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "event_decor",
+  ...getDbConfig(),
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -83,7 +82,6 @@ function isAuthenticated(req, res, next) {
   }
   res.redirect("/login");
 }
-
 // ================= ---------------- ROUTES ---------------- =================
 
 // Trang chủ
@@ -135,11 +133,46 @@ app.get("/contact", (req, res) => {
   res.render("contact.html", { user: req.session.user || null });
 });
 
-app.post("/contact", (req, res) => {
-  const { name, phone, email, message } = req.body;
-  console.log("Thông tin liên hệ:", { name, phone, email, message });
-  res.redirect("/contact");
+app.post("/contact", async (req, res) => {
+  try {
+    const { name, phone, email, message } = req.body;
+    let transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
+    await transporter.sendMail({
+      from: process.env.MAIL_USER,
+      to: process.env.MAIL_TO,
+      replyTo: email,
+      subject: `Liên hệ mới từ khách hàng`,
+      text: `Tên khách hàng: ${name}
+      Số điện thoại: ${phone}
+      Email: ${email}
+      Nội dung:${message}`,
+    });
+    const [result] = await pool.execute(
+      `
+      INSERT INTO contacts (full_name, email, phone, message) VALUES (?,?,?,?)`,
+      [name.trim(), phone.trim(), email.trim(), message.trim()],
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Gửi tin nhắn thành công!",
+    });
+  } catch (error) {
+    console.error("Lỗi gửi email contact:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Gửi tin nhắn thất bại. Vui lòng thử lại!",
+    });
+  }
 });
+
 // Trang đăng ký
 app.get("/register", (req, res) => {
   res.render("register.html", {
@@ -178,7 +211,7 @@ app.post("/api/auth/register", async (req, res) => {
   try {
     // Kiểm tra email đã được sử dụng chưa
     const [existing] = await pool.execute(
-      "SELECT id FROM `user` WHERE email = ? LIMIT 1",
+      "SELECT id FROM `users` WHERE email = ? LIMIT 1",
       [email],
     );
 
@@ -193,7 +226,7 @@ app.post("/api/auth/register", async (req, res) => {
 
     // Kiểm tra username trùng
     const [existingUsername] = await pool.execute(
-      "SELECT id FROM `user` WHERE username = ? LIMIT 1",
+      "SELECT id FROM `users` WHERE username = ? LIMIT 1",
       [finalUsername],
     );
 
@@ -207,10 +240,8 @@ app.post("/api/auth/register", async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
 
     const [result] = await pool.execute(
-      `INSERT INTO \`user\`
-       (username, email, password, full_name, phone, role)
-       VALUES (?, ?, ?, ?, ?, 'user')`,
-      [finalUsername, email, passwordHash, fullName, phone || null],
+      "INSERT INTO `users` (username, email, password) VALUES (?, ?, ?)",
+      [finalUsername, email, passwordHash],
     );
 
     return res.status(201).json({
@@ -253,24 +284,22 @@ app.post("/api/auth/google", async (req, res) => {
       repository: {
         async findByEmail(email) {
           const [accounts] = await pool.execute(
-            `SELECT id, username, email, full_name, phone, role
-             FROM \`user\` WHERE email = ? LIMIT 1`,
+            "SELECT id, username, email FROM `users` WHERE email = ? LIMIT 1",
             [email],
           );
           return accounts[0] || null;
         },
         async findByUsername(username) {
           const [accounts] = await pool.execute(
-            "SELECT id FROM `user` WHERE username = ? LIMIT 1",
+            "SELECT id FROM `users" + "` WHERE username = ? LIMIT 1",
             [username],
           );
           return accounts[0] || null;
         },
         async createUser(user) {
           await pool.execute(
-            `INSERT INTO \`user\` (username, email, password, full_name, role)
-             VALUES (?, ?, ?, ?, 'user')`,
-            [user.username, user.email, user.password, user.fullName],
+            "INSERT INTO `users` (username, email, password) VALUES (?, ?, ?)",
+            [user.username, user.email, user.password],
           );
         },
       },
@@ -281,9 +310,9 @@ app.post("/api/auth/google", async (req, res) => {
       id: account.id,
       username: account.username,
       email: account.email,
-      full_name: account.full_name,
-      phone: account.phone,
-      role: account.role,
+      full_name: account.full_name || account.username,
+      phone: account.phone || null,
+      role: account.role || "user",
     };
 
     return req.session.save((error) => {
@@ -339,9 +368,8 @@ app.post("/api/auth/login", async (req, res) => {
 
   try {
     const [rows] = await pool.execute(
-      `SELECT id, username, email, password,
-              full_name, phone, role
-       FROM \`user\`
+      `SELECT id, username, email, password
+       FROM \`users\`
        WHERE email = ?
        LIMIT 1`,
       [email],
@@ -358,19 +386,30 @@ app.post("/api/auth/login", async (req, res) => {
 
     const account = rows[0];
 
+    if (account.status === "locked") {
+      return res.status(403).json({
+        message: "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.",
+      });
+    }
+
     // Tạo session đăng nhập, không lưu mật khẩu vào session
     req.session.user = {
       id: account.id,
       username: account.username,
       email: account.email,
-      full_name: account.full_name,
-      phone: account.phone,
-      role: account.role,
+      full_name: account.full_name || account.username,
+      phone: account.phone || null,
+      role: account.role || "user",
     };
 
     return res.json({
       message: "Đăng nhập thành công!",
-      redirect: "/",
+      redirect:
+        account.role === "admin"
+          ? "/admin"
+          : account.role === "partner"
+            ? "/partner/orders/new"
+            : "/",
     });
   } catch (error) {
     console.error("Lỗi đăng nhập:", error);
@@ -395,7 +434,7 @@ app.put("/api/auth/profile", isAuthenticated, async (req, res) => {
 
   try {
     const [result] = await pool.execute(
-      `UPDATE \`user\`
+      `UPDATE \`users\`
        SET full_name = ?, phone = ?
        WHERE id = ?`,
       [fullName, phone || null, userId],
@@ -446,6 +485,83 @@ app.get("/api/current-user", isAuthenticated, (req, res) => {
   res.json({ user: req.session.user });
 });
 
+// Trung tâm báo cáo/phản ánh dành cho khách hàng và đối tác
+app.get("/report", isAuthenticated, (req, res) => {
+  res.render("report.html", {
+    user: req.session.user,
+    success: req.query.success || "",
+    error: null,
+  });
+});
+
+app.post("/report", isAuthenticated, async (req, res) => {
+  const subject = String(req.body.subject || "").trim();
+  const content = String(req.body.content || "").trim();
+  const category = String(req.body.category || "Khác").trim();
+  const orderId = req.body.order_id ? Number(req.body.order_id) : null;
+
+  if (subject.length < 3 || content.length < 10) {
+    return res.status(400).render("report.html", {
+      user: req.session.user,
+      success: "",
+      error: "Vui lòng nhập tiêu đề và nội dung phản ánh chi tiết hơn.",
+    });
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO reports (reporter_id, reporter_role, order_id, subject, category, content)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        req.session.user.id,
+        req.session.user.role === "partner" ? "partner" : "user",
+        Number.isFinite(orderId) ? orderId : null,
+        subject,
+        category,
+        content,
+      ],
+    );
+    res.redirect(
+      "/report?success=" +
+        encodeURIComponent(
+          "Phản ánh đã được gửi. Quản trị viên sẽ tiếp nhận và phản hồi sớm.",
+        ),
+    );
+  } catch (error) {
+    console.error("Lỗi gửi phản ánh:", error);
+    res.status(500).render("report.html", {
+      user: req.session.user,
+      success: "",
+      error: "Không thể gửi phản ánh lúc này. Vui lòng thử lại.",
+    });
+  }
+});
+
+app.get("/profile", isAuthenticated, async (req, res) => {
+  try {
+    const uid = req.session.user.id;
+
+    const [users] = await pool.execute(
+      "SELECT id, username, email, full_name, phone FROM `user` WHERE id = ?",
+      [uid],
+    );
+    if (!users.length) return res.redirect("/logout");
+
+    const [[stats]] = await pool.query(
+      "SELECT COUNT(*) AS count, COALESCE(SUM(final_amount), 0) AS spent FROM orders WHERE user_id = ?",
+      [uid],
+    );
+
+    res.render("profile.html", {
+      profile: users[0],
+      stats: { count: stats.count, spent: Number(stats.spent) },
+      user: req.session.user,
+    });
+  } catch (error) {
+    console.error("Lỗi trang hồ sơ:", error);
+    res.status(500).send("Lỗi truy vấn database");
+  }
+});
 // ======================================================
 // ===           QUẢN LÝ GIỎ HÀNG                     ===
 // ======================================================
@@ -542,9 +658,23 @@ app.get("/api/cart-count", isAuthenticated, (req, res) => {
 // Chi tiết dịch vụ: /services/:id
 app.use("/", serviceRoutes);
 
-// Đặt dịch vụ, thanh toán, lịch sử đơn hàng: /booking/:id, /orders
-const bookingRoutes = require("./js/booking_routes");
-app.use("/", bookingRoutes);
+// Đặt dịch vụ, thanh toán và lưu đơn hàng vào MySQL
+const checkoutRoutes = require("./js/checkout_routes");
+app.use("/", checkoutRoutes({ pool, SERVICES, isAuthenticated }));
+
+// Khu vực quản trị và cổng tạo đơn dành cho đối tác
+const createAdminRoutes = require("./js/admin_routes");
+app.use("/", createAdminRoutes({ pool }));
+
+app.use((error, req, res, next) => {
+  console.error("Lỗi xử lý yêu cầu:", error);
+  if (res.headersSent) return next(error);
+  res
+    .status(500)
+    .send(
+      "Hệ thống đang gặp lỗi. Vui lòng kiểm tra database hoặc thử lại sau.",
+    );
+});
 
 if (require.main === module) {
   app.listen(PORT, () => {

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Quản trị{% endblock %} · EventDecor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <a class="admin-brand" href="/admin">
+      <span class="admin-brand-mark">ED</span>
+      <span><b>EventDecor</b><small>Trung tâm quản trị</small></span>
+    </a>
+    <nav class="admin-nav" aria-label="Điều hướng quản trị">
+      <span class="nav-label">Tổng quan</span>
+      <a class="{% if active == 'dashboard' %}active{% endif %}" href="/admin"><span>▦</span> Dashboard</a>
+      <span class="nav-label">Vận hành</span>
+      <a class="{% if active == 'users' %}active{% endif %}" href="/admin/users"><span>♙</span> Người dùng</a>
+      <a class="{% if active == 'orders' %}active{% endif %}" href="/admin/orders"><span>▤</span> Duyệt đơn hàng</a>
+      <a class="{% if active == 'finance' %}active{% endif %}" href="/admin/finance"><span>₫</span> Thu chi & hoa hồng</a>
+      <a class="{% if active == 'reports' %}active{% endif %}" href="/admin/reports"><span>!</span> Báo cáo & phản ánh</a>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <a href="/">← Về trang khách hàng</a>
+      <a href="/logout">Đăng xuất</a>
+    </div>
+  </aside>
+
+  <div class="admin-shell">
+    <header class="admin-topbar">
+      <button class="menu-toggle" type="button" aria-label="Mở menu" onclick="document.body.classList.toggle('menu-open')">☰</button>
+      <div>
+        <p class="eyebrow">EVENTDECOR CONTROL CENTER</p>
+        <p class="topbar-date" id="today-label"></p>
+      </div>
+      <div class="admin-identity">
+        <span class="avatar">{{ (admin.full_name or admin.username or 'A') | first | upper }}</span>
+        <span><b>{{ admin.full_name or admin.username }}</b><small>Quản trị viên</small></span>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      {% if notice %}<div class="notice success">{{ notice }}</div>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('today-label').textContent = new Intl.DateTimeFormat('vi-VN', {
+      weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+    }).format(new Date());
+    document.addEventListener('click', function (event) {
+      if (document.body.classList.contains('menu-open') && !event.target.closest('.admin-sidebar') && !event.target.closest('.menu-toggle')) {
+        document.body.classList.remove('menu-open');
+      }
+    });
+  </script>
+  <script src="/js/admin/actions.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
+
