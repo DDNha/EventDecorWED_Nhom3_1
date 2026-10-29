@@ -31,9 +31,25 @@
         <li class="nav-item">
           <a id="login" class="btn btn-pill text-white btn-login" href="/login">Đăng nhập</a>
         </li>
-        <li class="nav-item">
-          <a id="username" class="btn btn-pill text-white btn-register" hidden="hidden"></a>
+
+        <!-- Menu người dùng: hiện sau khi đăng nhập -->
+        <li class="nav-item dropdown" id="userMenu" hidden="hidden">
+          <a id="username" class="btn btn-pill text-white btn-register dropdown-toggle"
+             href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"></a>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+            <li>
+              <a class="dropdown-item" href="/profile">
+                <i class="fa-regular fa-user me-2"></i>Hồ sơ khách hàng
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="/orders">
+                <i class="fa-solid fa-clock-rotate-left me-2"></i>Lịch sử thanh toán
+              </a>
+            </li>
+          </ul>
         </li>
+
         <li class="nav-item">
           <a id="logout" class="btn btn-pill text-white btn-register" href="/logout" hidden="hidden">Đăng xuất</a>
         </li>
@@ -48,10 +64,10 @@
   fetch('/api/current-user')
     .then(res => res.json())
     .then(data => {
-      document.getElementById('username').innerText = data.username;
+      document.getElementById('username').innerText = data.user.full_name || data.user.username;
       document.getElementById('register').hidden = true;
       document.getElementById('login').hidden = true;
-      document.getElementById('username').hidden = false;
+      document.getElementById('userMenu').hidden = false;
       document.getElementById('logout').hidden = false;
     })
     .catch(err => {
