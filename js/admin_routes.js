@@ -82,7 +82,7 @@ module.exports = function createAdminRoutes({ pool }) {
                COALESCE(p.name, (
                  SELECT GROUP_CONCAT(DISTINCT pi.name SEPARATOR ', ')
                  FROM order_items oi
-                 JOIN services s ON s.id = oi.service_id
+                 JOIN products s ON s.id = oi.service_id
                  JOIN partners pi ON pi.id = s.partner_id
                  WHERE oi.order_id = o.id
                ), 'Chưa gán') AS partner_name
@@ -244,7 +244,7 @@ module.exports = function createAdminRoutes({ pool }) {
                COALESCE(p.name, (
                  SELECT GROUP_CONCAT(DISTINCT pi.name SEPARATOR ', ')
                  FROM order_items oi
-                 JOIN services s ON s.id = oi.service_id
+                 JOIN products s ON s.id = oi.service_id
                  JOIN partners pi ON pi.id = s.partner_id
                  WHERE oi.order_id = o.id
                ), 'Chưa gán') AS partner_name
