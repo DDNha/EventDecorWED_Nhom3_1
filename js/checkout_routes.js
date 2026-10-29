@@ -6,6 +6,7 @@ module.exports = function ({ pool, SERVICES, isAuthenticated }) {
 
   const STEPS = ['Đã đặt hàng', 'Hoàn thành'];
   const FEE_RATE = 0.05; // phải khớp với cart.html
+  const COMMISSION_RATE = 10;
   const METHODS = {
     cod: 'Thanh toán khi nghiệm thu',
     bank: 'Chuyển khoản ngân hàng',
@@ -78,16 +79,18 @@ module.exports = function ({ pool, SERVICES, isAuthenticated }) {
         `INSERT INTO orders
          (user_id, customer_name, customer_phone, event_date, event_time,
           event_location, note, total_amount, discount_amount, final_amount,
-          payment_method, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 'pending')`,
+          payment_method, status, source_role, commission_rate, commission_amount, partner_payout)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 'pending', 'customer', ?, ?, ?)`,
         [req.session.user.id, name, phone, date, time, address, note,
-          summary.subtotal, summary.total, METHODS[form.method]]
+          summary.subtotal, summary.total, METHODS[form.method], COMMISSION_RATE,
+          Math.round(summary.total * COMMISSION_RATE / 100),
+          summary.total - Math.round(summary.total * COMMISSION_RATE / 100)]
       );
       const orderId = result.insertId;
 
       const rows = summary.lines.map((l) => [orderId, l.service.id, l.qty, l.price]);
       await conn.query(
-        'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?',
+        'INSERT INTO order_items (order_id, service_id, quantity, price) VALUES ?',
         [rows]
       );
 
@@ -117,11 +120,11 @@ module.exports = function ({ pool, SERVICES, isAuthenticated }) {
       let itemRows = [];
       if (orderRows.length) {
         [itemRows] = await pool.query(
-          `SELECT oi.order_id, oi.product_id, oi.quantity, oi.price,
-                  p.name AS title, p.img AS image, pt.name AS partner
+          `SELECT oi.order_id, oi.service_id AS product_id, oi.quantity, oi.price,
+                  s.title, s.image, pt.name AS partner
            FROM order_items oi
-           LEFT JOIN products p  ON p.id = oi.product_id
-           LEFT JOIN partners pt ON pt.id = p.partner_id
+           LEFT JOIN services s  ON s.id = oi.service_id
+           LEFT JOIN partners pt ON pt.id = s.partner_id
            WHERE oi.order_id IN (?)`,
           [orderRows.map((o) => o.id)]
         );
@@ -160,16 +163,8 @@ module.exports = function ({ pool, SERVICES, isAuthenticated }) {
     }
   });
 
-  // Nút demo: đánh dấu hoàn thành (xoá khi đã có trang cho đối tác/admin)
+  // Chỉ admin mới được cập nhật tiến độ; giữ route cũ để không làm hỏng giao diện khách hàng.
   router.post('/orders/:id/advance', isAuthenticated, async (req, res) => {
-    try {
-      await pool.query(
-        "UPDATE orders SET status = 'completed' WHERE id = ? AND user_id = ? AND status = 'pending'",
-        [req.params.id, req.session.user.id]
-      );
-    } catch (err) {
-      console.error(err);
-    }
     res.redirect('/orders');
   });
 

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Gửi báo cáo & phản ánh · EventDecor{% endblock %}
+{% block content %}
+<section class="py-5" style="background:#f4f7fb;min-height:70vh">
+  <div class="container" style="max-width:820px">
+    <div class="text-center mb-4"><span class="badge text-bg-primary mb-2">TRUNG TÂM HỖ TRỢ</span><h1 class="h3 fw-bold">Báo cáo hoặc gửi phản ánh</h1><p class="text-secondary">Nội dung sẽ được chuyển trực tiếp đến quản trị viên EventDecor.</p></div>
+    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    <form class="card border-0 shadow-sm rounded-4" method="post" action="/report">
+      <div class="card-body p-4 p-md-5">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label fw-semibold">Loại phản ánh</label><select class="form-select" name="category"><option>Chất lượng dịch vụ</option><option>Thanh toán / hoa hồng</option><option>Đơn hàng</option><option>Tài khoản</option><option>Đối tác / khách hàng</option><option>Khác</option></select></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">Mã đơn liên quan</label><input class="form-control" name="order_id" type="number" min="1" placeholder="Không bắt buộc"></div>
+          <div class="col-12"><label class="form-label fw-semibold">Tiêu đề *</label><input class="form-control" name="subject" maxlength="180" required></div>
+          <div class="col-12"><label class="form-label fw-semibold">Nội dung chi tiết *</label><textarea class="form-control" name="content" rows="7" minlength="10" required placeholder="Mô tả sự việc, thời điểm, mong muốn xử lý và các thông tin cần thiết..."></textarea></div>
+        </div>
+      </div>
+      <div class="card-footer bg-white border-top p-4 d-flex justify-content-end rounded-bottom-4"><button class="btn btn-primary px-4" type="submit">Gửi đến quản trị viên</button></div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
