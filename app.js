@@ -1,13 +1,18 @@
 require("dotenv").config();
-const { OAuth2Client } = require("google-auth-library");
 const express = require("express");
 const nunjucks = require("nunjucks");
 const path = require("path");
 const session = require("express-session");
-const nodemailer = require("nodemailer");
 const mysql = require("mysql2/promise");
+const bcrypt = require("bcryptjs");
+const { OAuth2Client } = require("google-auth-library");
+const { signInWithGoogle } = require("./js/google_auth");
 const serviceRoutes = require("./js/service_routes");
-const SERVICES = [];
+const SERVICES = serviceRoutes.SERVICES.map((s) => ({
+  ...s,
+  name: s.title,
+}));
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const GOOGLE_CLIENT_ID =
@@ -15,19 +20,14 @@ const GOOGLE_CLIENT_ID =
   "921639641123-44j6hefhg2iobahvm24cdi3u290rabl0.apps.googleusercontent.com";
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-// Load file .env
-require("dotenv").config();
 // Middleware đọc dữ liệu từ Form POST và JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(
-  "/admin-assets",
-  express.static(path.join(__dirname, "views", "admin")),
-);
+
 // Cấu hình Express Session
 app.use(
   session({
-    secret: "chuoi_bi_mat_rat_an_toan",
+    secret: process.env.SESSION_SECRET || "chuoi_bi_mat_rat_an_toan",
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 1000 * 60 * 60 * 24 }, // Phiên tồn tại trong 1 ngày
@@ -39,10 +39,7 @@ app.use("/css", express.static(path.join(__dirname, "css")));
 app.use("/img", express.static(path.join(__dirname, "img")));
 app.use("/js", express.static(path.join(__dirname, "js")));
 app.use(express.static(path.join(__dirname, "public")));
-app.use(
-  "/admin-assets",
-  express.static(path.join(__dirname, "views", "admin")),
-);
+
 // Cấu hình Nunjucks Template Engine cho thư mục views/
 const env = nunjucks.configure("views", {
   autoescape: true,
@@ -54,10 +51,11 @@ env.addFilter("vnd", (n) => Number(n).toLocaleString("vi-VN"));
 
 // Kết nối SQL (Pool)
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "", // Điền mật khẩu MySQL của bạn nếu có
-  database: "event_decor", // Tên database của bạn
+  host: process.env.DB_HOST || "localhost",
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "event_decor",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -65,62 +63,15 @@ const pool = mysql.createPool({
 
 async function testConnection() {
   try {
-    await pool.getConnection();
+    const connection = await pool.getConnection();
+    connection.release();
     console.log("Kết nối MySQL thành công!");
   } catch (error) {
     console.error("Lỗi kết nối MySQL:", error);
   }
 }
 
-testConnection().then();
-// Nạp dịch vụ từ database vào bộ nhớ
-async function loadServices() {
-  const [rows] = await pool.query(`
-    SELECT
-      p.id,
-      p.name,
-      p.img,
-      p.rating,
-      p.reviewsCount,
-      p.price,
-      p.category,
-      p.short_desc,
-      p.executionTime,
-      p.location,
-      p.partner_id,
-      partner.name AS partner,
-      p.description
-    FROM products p
-    LEFT JOIN partners partner ON partner.id = p.partner_id
-    ORDER BY p.id
-  `);
-
-  const list = rows.map((r) => ({
-    id: r.id,
-    title: r.name,
-    name: r.name,
-    image: r.img,
-    rating: Number(r.rating),
-    reviews: r.reviewsCount,
-    price: r.price,
-    category: r.category,
-    short: r.short_desc,
-    duration: r.executionTime,
-    area: r.location,
-    partner: r.partner,
-    partner_id: r.partner_id,
-    includes: String(r.includes || "")
-      .split("\n")
-      .filter(Boolean),
-    description: r.description,
-  }));
-
-  // Cập nhật tại chỗ để cả app.js và service_routes.js cùng thấy dữ liệu mới
-  SERVICES.length = 0;
-  SERVICES.push(...list);
-  serviceRoutes.SERVICES.length = 0;
-  serviceRoutes.SERVICES.push(...list);
-}
+if (!process.env.SKIP_DATABASE_CONNECTION_TEST) testConnection().then();
 
 // Middleware kiểm tra xem người dùng đã đăng nhập chưa
 function isAuthenticated(req, res, next) {
@@ -138,8 +89,9 @@ function isAuthenticated(req, res, next) {
 // Trang chủ
 app.get("/", async (req, res) => {
   try {
-    const [partners] = await pool.query("SELECT * FROM partners");
-    console.log("Số đối tác lấy được:", partners.length, partners);
+    const [partners] = await pool
+      .query(`SELECT * FROM partners`)
+      .catch(() => [[]]);
     res.render("index.html", {
       services: SERVICES.slice(0, 6), // chỉ 6 dịch vụ nổi bật
       part: partners,
@@ -155,67 +107,11 @@ app.get("/", async (req, res) => {
 app.get("/about", (req, res) => {
   res.render("aboutus.html", { user: req.session.user || null });
 });
-// Trang admin
-app.get("/admin", (req, res) => {
-  res.render("admin/dashboard.html");
-});
-app.get("/admin/manager-customer", (req, res) => {
-  res.render("admin/manager-customer.html");
-});
-app.get("/admin/manager-partner", (req, res) => {
-  res.render("admin/manager-partner.html");
-});
-app.get("/admin/approve-event", (req, res) => {
-  res.render("admin/approve-event.html");
-});
-app.get("/admin/available-event", (req, res) => {
-  res.render("admin/available-event.html");
-});
-app.get("/admin/orders", (req, res) => {
-  res.render("admin/orders.html");
-});
-app.get("/admin/report-review", (req, res) => {
-  res.render("admin/report-review.html");
-});
-app.get("/admin/financial-payout", (req, res) => {
-  res.render("admin/financial-payout.html");
-});
-app.get("/partner/:id", async (req, res) => {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id < 1) {
-    return res.status(404).send("Không tìm thấy đối tác");
-  }
 
-  try {
-    const sql = `
-      SELECT p.name, p.image, p.description, p.address, p.phone, p.email,
-             s.name AS specialty_name
-      FROM partners p
-      JOIN partner_specialties ps ON ps.partner_id = p.id
-      JOIN specialties s ON s.id = ps.specialty_id
-      WHERE p.id = ?`;
-    const [rows] = await pool.query(sql, [id]);
-    if (rows.length === 0) {
-      return res.status(404).send("Không tìm thấy đối tác");
-    }
-    const [other] = await pool.query(
-      `SELECT id, name FROM partners where id <> ? limit 2`,
-      [id],
-    );
-    return res.render("detailed-partner.html", {
-      parts: rows[0],
-      spec: rows.map((r) => r.specialty_name),
-      other,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send("Lỗi truy vấn database");
-  }
-});
 // Dịch vụ
 app.get("/services", (req, res) => {
   res.render("eventservices.html", {
-    services: SERVICES,
+    services: SERVICES, // hiển thị TẤT CẢ dịch vụ
     user: req.session.user || null,
   });
 });
@@ -223,39 +119,9 @@ app.get("/services", (req, res) => {
 // Đối tác
 app.get("/partner", async (req, res) => {
   try {
-    const [partners] = await pool.query("SELECT * FROM partners");
+    const [partners] = await pool.query(`SELECT * FROM partners`);
     res.render("partner.html", {
-      // đổi từ partner_list.html
       part: partners,
-      user: req.session.user || null,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Lỗi truy vấn database");
-  }
-});
-
-// Chi tiết đối tác: /partner/:id
-app.get("/partner/:id", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT * FROM partners WHERE id = ?", [
-      req.params.id,
-    ]);
-
-    if (rows.length === 0) {
-      return res.status(404).send("Không tìm thấy đối tác.");
-    }
-
-    const partner = rows[0];
-
-    // Lấy các dịch vụ thuộc đối tác này
-    const services = SERVICES.filter(
-      (s) => s.partner_id === partner.id || s.partner === partner.name,
-    );
-
-    res.render("partner_detail.html", {
-      partner,
-      services,
       user: req.session.user || null,
     });
   } catch (error) {
@@ -269,56 +135,25 @@ app.get("/contact", (req, res) => {
   res.render("contact.html", { user: req.session.user || null });
 });
 
-app.post("/contact", async (req, res) => {
-  try {
-    const { name, phone, email, message } = req.body;
-    let transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
-    });
-    await transporter.sendMail({
-      from: process.env.MAIL_USER,
-      to: process.env.MAIL_TO,
-      replyTo: email,
-      subject: `Liên hệ mới từ khách hàng`,
-      text: `Tên khách hàng: ${name}
-      Số điện thoại: ${phone}
-      Email: ${email}
-      Nội dung:${message}`,
-    });
-    const [result] = await pool.execute(
-      `
-      INSERT INTO contacts (full_name, email, phone, message) VALUES (?,?,?,?)`,
-      [name.trim(), phone.trim(), email.trim(), message.trim()],
-    );
-    return res.status(200).json({
-      success: true,
-      message: "Gửi tin nhắn thành công!",
-    });
-  } catch (error) {
-    console.error("Lỗi gửi email contact:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Gửi tin nhắn thất bại. Vui lòng thử lại!",
-    });
-  }
+app.post("/contact", (req, res) => {
+  const { name, phone, email, message } = req.body;
+  console.log("Thông tin liên hệ:", { name, phone, email, message });
+  res.redirect("/contact");
 });
-
-const bcrypt = require("bcryptjs");
-
 // Trang đăng ký
 app.get("/register", (req, res) => {
-  res.render("register.html", { user: req.session.user || null });
+  res.render("register.html", {
+    user: req.session.user || null,
+    googleClientId: GOOGLE_CLIENT_ID,
+  });
 });
 
 // Trang đăng nhập
 app.get(["/loggin", "/login"], (req, res) => {
-  res.render("loggin.html", { user: req.session.user || null });
+  res.render("loggin.html", {
+    user: req.session.user || null,
+    googleClientId: GOOGLE_CLIENT_ID,
+  });
 });
 app.get("/forgot-password", (req, res) => {
   res.render("forgot-password.html");
@@ -398,6 +233,98 @@ app.post("/api/auth/register", async (req, res) => {
 });
 
 /* ================= API ĐĂNG NHẬP ================= */
+app.post("/api/auth/google", async (req, res) => {
+  const credential = String(req.body.credential || "");
+  if (!credential) {
+    return res
+      .status(400)
+      .json({ message: "Thiếu thông tin xác thực Google." });
+  }
+
+  let tokenVerified = false;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    tokenVerified = true;
+    const account = await signInWithGoogle({
+      profile: ticket.getPayload(),
+      repository: {
+        async findByEmail(email) {
+          const [accounts] = await pool.execute(
+            `SELECT id, username, email, full_name, phone, role
+             FROM \`user\` WHERE email = ? LIMIT 1`,
+            [email],
+          );
+          return accounts[0] || null;
+        },
+        async findByUsername(username) {
+          const [accounts] = await pool.execute(
+            "SELECT id FROM `user` WHERE username = ? LIMIT 1",
+            [username],
+          );
+          return accounts[0] || null;
+        },
+        async createUser(user) {
+          await pool.execute(
+            `INSERT INTO \`user\` (username, email, password, full_name, role)
+             VALUES (?, ?, ?, ?, 'user')`,
+            [user.username, user.email, user.password, user.fullName],
+          );
+        },
+      },
+      hashPassword: (password) => bcrypt.hash(password, 12),
+    });
+
+    req.session.user = {
+      id: account.id,
+      username: account.username,
+      email: account.email,
+      full_name: account.full_name,
+      phone: account.phone,
+      role: account.role,
+    };
+
+    return req.session.save((error) => {
+      if (error) {
+        console.error("Lỗi lưu phiên Google:", error);
+        return res
+          .status(500)
+          .json({ message: "Không thể tạo phiên đăng nhập." });
+      }
+      res.json({ message: "Đăng nhập bằng Google thành công!", redirect: "/" });
+    });
+  } catch (error) {
+    console.error("Lỗi đăng nhập Google:", error);
+    if (tokenVerified) {
+      if (error.code === "ER_NO_SUCH_TABLE") {
+        return res.status(500).json({
+          message: "Chưa tìm thấy bảng tài khoản trong cơ sở dữ liệu.",
+        });
+      }
+      if (error.code === "ER_BAD_FIELD_ERROR") {
+        return res.status(500).json({
+          message:
+            "Cấu trúc bảng tài khoản chưa đủ các cột cần thiết để đăng nhập Google.",
+        });
+      }
+      if (error.code === "ER_NO_DEFAULT_FOR_FIELD") {
+        return res.status(500).json({
+          message:
+            "Cấu trúc bảng tài khoản còn thiếu giá trị mặc định cho tài khoản Google.",
+        });
+      }
+      return res.status(500).json({
+        message: "Không thể tạo hoặc truy cập tài khoản. Vui lòng thử lại.",
+      });
+    }
+    return res.status(401).json({
+      message: "Không thể xác minh tài khoản Google. Vui lòng thử lại.",
+    });
+  }
+});
+
 app.post("/api/auth/login", async (req, res) => {
   const email = String(req.body.email || "")
     .trim()
@@ -519,31 +446,6 @@ app.get("/api/current-user", isAuthenticated, (req, res) => {
   res.json({ user: req.session.user });
 });
 
-app.get("/profile", isAuthenticated, async (req, res) => {
-  try {
-    const uid = req.session.user.id;
-
-    const [users] = await pool.execute(
-      "SELECT id, username, email, full_name, phone FROM `user` WHERE id = ?",
-      [uid],
-    );
-    if (!users.length) return res.redirect("/logout");
-
-    const [[stats]] = await pool.query(
-      "SELECT COUNT(*) AS count, COALESCE(SUM(final_amount), 0) AS spent FROM orders WHERE user_id = ?",
-      [uid],
-    );
-
-    res.render("profile.html", {
-      profile: users[0],
-      stats: { count: stats.count, spent: Number(stats.spent) },
-      user: req.session.user,
-    });
-  } catch (error) {
-    console.error("Lỗi trang hồ sơ:", error);
-    res.status(500).send("Lỗi truy vấn database");
-  }
-});
 // ======================================================
 // ===           QUẢN LÝ GIỎ HÀNG                     ===
 // ======================================================
@@ -644,12 +546,71 @@ app.use("/", serviceRoutes);
 const bookingRoutes = require("./js/booking_routes");
 app.use("/", bookingRoutes);
 
-loadServices()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server đang chạy thành công tại: http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("Không nạp được dịch vụ từ database:", err);
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server đang chạy thành công tại: http://localhost:${PORT}`);
   });
+}
+// Trang admin
+app.get("/admin", (req, res) => {
+  res.render("admin/dashboard.html");
+});
+app.get("/admin/manager-customer", (req, res) => {
+  res.render("admin/manager-customer.html");
+});
+app.get("/admin/manager-partner", (req, res) => {
+  res.render("admin/manager-partner.html");
+});
+app.get("/admin/approve-event", (req, res) => {
+  res.render("admin/approve-event.html");
+});
+app.get("/admin/available-event", (req, res) => {
+  res.render("admin/available-event.html");
+});
+app.get("/admin/orders", (req, res) => {
+  res.render("admin/orders.html");
+});
+app.get("/admin/report-review", (req, res) => {
+  res.render("admin/report-review.html");
+});
+app.get("/admin/financial-payout", (req, res) => {
+  res.render("admin/financial-payout.html");
+});
+app.get("/partner/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(404).send("Không tìm thấy đối tác");
+  }
+
+  try {
+    const sql = `
+      SELECT p.name, p.image, p.description, p.address, p.phone, p.email,
+             s.name AS specialty_name
+      FROM partners p
+      JOIN partner_specialties ps ON ps.partner_id = p.id
+      JOIN specialties s ON s.id = ps.specialty_id
+      WHERE p.id = ?`;
+    const [rows] = await pool.query(sql, [id]);
+    if (rows.length === 0) {
+      return res.status(404).send("Không tìm thấy đối tác");
+    }
+    const [other] = await pool.query(
+      `SELECT id, name FROM partners where id <> ? limit 2`,
+      [id],
+    );
+    return res.render("detailed-partner.html", {
+      parts: rows[0],
+      spec: rows.map((r) => r.specialty_name),
+      other,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Lỗi truy vấn database");
+  }
+});
+app.use(
+  "/admin-assets",
+  express.static(path.join(__dirname, "views", "admin")),
+);
+
+module.exports = app;
