@@ -6,7 +6,7 @@ const router = express.Router();
 const SERVICES = [];
 
 function getService(id) {
-  return SERVICES.find((s) => s.id === id);
+  return SERVICES.find((s) => Number(s.id) === id);
 }
 
 // GET /services/:id
