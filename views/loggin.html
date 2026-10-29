@@ -1,12 +1,6 @@
-
-
-{% block title %}{% endblock %}
-
-{% block css %}
+{% block title %}{% endblock %} {% block css %}
 <link rel="stylesheet" href="/css/loggin_style.css" />
-{% endblock css %}
-
-{% block content %}
+{% endblock css %} {% block content %}
 <div class="container">
   <h2>Đăng nhập</h2>
   <p class="subtitle">Chào mừng bạn quay trở lại!</p>
@@ -15,15 +9,31 @@
   <form onsubmit="handleLogin(event)">
     <div class="form-group">
       <label for="loginEmail">Email</label>
-      <input type="email" id="loginEmail" placeholder="Nhập email của bạn" required>
+      <input
+        type="email"
+        id="loginEmail"
+        placeholder="Nhập email của bạn"
+        required
+      />
     </div>
     <div class="form-group">
       <label for="loginPassword">Mật khẩu</label>
-      <input type="password" id="loginPassword" placeholder="Nhập mật khẩu" required>
-      <span class="toggle-password" onclick="togglePassword('loginPassword', this)">Hiện</span>
+      <input
+        type="password"
+        id="loginPassword"
+        placeholder="Nhập mật khẩu"
+        required
+      />
+      <span
+        class="toggle-password"
+        onclick="togglePassword('loginPassword', this)"
+        >Hiện</span
+      >
     </div>
-    <div style="text-align: right; margin-bottom: 15px;">
-      <a href="forgot-password" style="font-size: 13px; color: #667eea;">Quên mật khẩu?</a>
+    <div style="text-align: right; margin-bottom: 15px">
+      <a href="forgot-password" style="font-size: 13px; color: #667eea"
+        >Quên mật khẩu?</a
+      >
     </div>
     <button type="submit" class="btn btn-primary">Đăng nhập</button>
   </form>
@@ -31,7 +41,11 @@
   <div class="divider"><span>hoặc</span></div>
 
   <!-- Nút Google sẽ được render bởi Google SDK -->
-  <div id="googleBtn" data-client-id="{{ googleClientId }}" style="display: flex; justify-content: center;"></div>
+  <div
+    id="googleBtn"
+    data-client-id="{{ googleClientId }}"
+    style="display: flex; justify-content: center"
+  ></div>
   <div class="links">
     Chưa có tài khoản? <a href="register">Đăng ký ngay</a>
   </div>
