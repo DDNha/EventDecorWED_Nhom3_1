@@ -33,13 +33,14 @@ app.use(session({
 // Phục vụ file tĩnh từ các thư mục css, img, js và public
 // Làm mới danh sách sản phẩm (cache 30 giây) trước khi xử lý các trang
 app.use(async (req, res, next) => {
-  if (req.method === 'GET' && !/^\/(css|img|js)\//.test(req.path)) await loadProducts();
+  if (req.method === 'GET' && !/^\/(css|img|js|admin-assets)\//.test(req.path)) await loadProducts();
   next();
 });
 
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/img', express.static(path.join(__dirname, 'img')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/admin-assets', express.static(path.join(__dirname, 'views', 'admin')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Cấu hình Nunjucks Template Engine cho thư mục views/
@@ -78,30 +79,13 @@ async function loadProducts(force = false) {
   try {
     const [rows] = await pool.query('SELECT * FROM products ORDER BY id');
     PRODUCTS.length = 0;
-    // Hỗ trợ cả cột kiểu mới (title, image, reviews, duration, area, includes)
-    // lẫn kiểu cũ (name, img, reviewsCount, executionTime, location)
-    rows.forEach((p) => {
-      const name = p.title ?? p.name;
-      const image = p.image ?? p.img;
-      PRODUCTS.push({
-        ...p,
-        name,
-        title: name,
-        image,
-        img: image,
-        reviews: p.reviews ?? p.reviewsCount ?? 0,
-        reviewsCount: p.reviewsCount ?? p.reviews ?? 0,
-        duration: p.duration ?? p.executionTime,
-        executionTime: p.executionTime ?? p.duration,
-        area: p.area ?? p.location,
-        location: p.location ?? p.area,
-        includes: typeof p.includes === 'string'
-          ? p.includes.split(/\r?\n/).filter(Boolean)
-          : (p.includes || []),
-        price: Number(p.price),
-        rating: Number(p.rating)
-      });
-    });
+    rows.forEach((p) => PRODUCTS.push({
+      ...p,
+      title: p.name,
+      image: p.img,
+      price: Number(p.price),
+      rating: Number(p.rating)
+    }));
     productsLoadedAt = Date.now();
   } catch (error) {
     console.error('Lỗi nạp dịch vụ từ bảng products:', error.message);
@@ -118,6 +102,7 @@ function isAuthenticated(req, res, next) {
   }
   res.redirect("/login");
 }
+
 // ================= ---------------- ROUTES ---------------- =================
 
 // Trang chủ
@@ -208,7 +193,6 @@ app.post('/api/auth/register', async (req, res) => {
   }
 
   try {
-    // Kiểm tra email đã được sử dụng chưa
     const [existing] = await pool.execute(
       'SELECT id FROM `users` WHERE email = ? LIMIT 1',
       [email]
@@ -220,10 +204,8 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // Nếu không nhập username, tạo username từ phần trước @ của email
     const finalUsername = username || email.split('@')[0];
 
-    // Kiểm tra username trùng
     const [existingUsername] = await pool.execute(
       'SELECT id FROM `users` WHERE username = ? LIMIT 1',
       [finalUsername]
@@ -235,11 +217,10 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // Mã hóa mật khẩu trước khi lưu
     const passwordHash = await bcrypt.hash(password, 12);
 
     const [result] = await pool.execute(
-      `INSERT INTO \`user\`
+      `INSERT INTO \`users\`
          (username, email, password, full_name, phone, role)
        VALUES (?, ?, ?, ?, ?, 'user')`,
       [finalUsername, email, passwordHash, fullName, phone || null]
@@ -285,21 +266,22 @@ app.post('/api/auth/google', async (req, res) => {
       repository: {
         async findByEmail(email) {
           const [accounts] = await pool.execute(
-            'SELECT id, username, email FROM `users` WHERE email = ? LIMIT 1', [email]
+            `SELECT id, username, email, full_name, phone, role
+             FROM \`users\` WHERE email = ? LIMIT 1`, [email]
           );
           return accounts[0] || null;
         },
         async findByUsername(username) {
           const [accounts] = await pool.execute(
-            'SELECT id FROM `users' +
-            '` WHERE username = ? LIMIT 1', [username]
+            'SELECT id FROM `users` WHERE username = ? LIMIT 1', [username]
           );
           return accounts[0] || null;
         },
         async createUser(user) {
           await pool.execute(
-            'INSERT INTO `users` (username, email, password) VALUES (?, ?, ?)',
-            [user.username, user.email, user.password]
+            `INSERT INTO \`users\` (username, email, password, full_name, role)
+             VALUES (?, ?, ?, ?, 'user')`,
+            [user.username, user.email, user.password, user.fullName]
           );
         }
       },
@@ -310,9 +292,9 @@ app.post('/api/auth/google', async (req, res) => {
       id: account.id,
       username: account.username,
       email: account.email,
-      full_name: account.full_name || account.username,
-      phone: account.phone || null,
-      role: account.role || 'user'
+      full_name: account.full_name,
+      phone: account.phone,
+      role: account.role
     };
 
     return req.session.save((error) => {
@@ -352,7 +334,8 @@ app.post('/api/auth/login', async (req, res) => {
 
   try {
     const [rows] = await pool.execute(
-      `SELECT id, username, email, password
+      `SELECT id, username, email, password,
+              full_name, phone, role, status
        FROM \`users\`
        WHERE email = ?
          LIMIT 1`,
@@ -376,14 +359,13 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Tạo session đăng nhập, không lưu mật khẩu vào session
     req.session.user = {
       id: account.id,
       username: account.username,
       email: account.email,
-      full_name: account.full_name || account.username,
-      phone: account.phone || null,
-      role: account.role || 'user'
+      full_name: account.full_name,
+      phone: account.phone,
+      role: account.role
     };
 
     return res.json({
@@ -428,7 +410,6 @@ app.put('/api/auth/profile', isAuthenticated, async (req, res) => {
       });
     }
 
-    // Cập nhật thông tin trong session
     req.session.user.full_name = fullName;
     req.session.user.phone = phone || null;
 
@@ -452,8 +433,6 @@ app.put('/api/auth/profile', isAuthenticated, async (req, res) => {
     });
   }
 });
-
-
 
 // Đăng xuất
 app.get('/logout', (req, res) => {
@@ -516,7 +495,7 @@ app.get('/profile', isAuthenticated, async (req, res) => {
     const uid = req.session.user.id;
 
     const [users] = await pool.execute(
-      'SELECT id, username, email, full_name, phone FROM `user` WHERE id = ?',
+      'SELECT id, username, email, full_name, phone FROM `users` WHERE id = ?',
       [uid]
     );
     if (!users.length) return res.redirect('/logout');
@@ -536,6 +515,7 @@ app.get('/profile', isAuthenticated, async (req, res) => {
     res.status(500).send('Lỗi truy vấn database');
   }
 });
+
 // ======================================================
 // ===           QUẢN LÝ GIỎ HÀNG                     ===
 // ======================================================
@@ -543,32 +523,6 @@ app.get('/profile', isAuthenticated, async (req, res) => {
 function findProduct(productId) {
   return PRODUCTS.find(p => p.id === parseInt(productId));
 }
-
-// Nút "Đặt dịch vụ" ở trang chi tiết: thêm sản phẩm vào giỏ rồi chuyển thẳng sang trang thanh toán
-app.get(['/booking/:id', '/products/:id/book', '/services/:id/book'], isAuthenticated, (req, res) => {
-  const product = findProduct(req.params.id);
-
-  if (!product) {
-    return res.status(404).send('Không tìm thấy sản phẩm.');
-  }
-
-  if (!req.session.cart) {
-    req.session.cart = [];
-  }
-
-  const existing = req.session.cart.find(item => item.product_id === product.id);
-  if (!existing) {
-    req.session.cart.push({
-      product_id: product.id,
-      name:       product.name,
-      price:      product.price,
-      img:        product.image,
-      qty:        1
-    });
-  }
-
-  res.redirect('/checkout');
-});
 
 app.get('/cart', isAuthenticated, (req, res) => {
   const cart = req.session.cart || [];
@@ -651,29 +605,40 @@ app.get('/api/cart-count', isAuthenticated, (req, res) => {
 
 // ======================================================
 
-// Chi tiết dịch vụ: /services/:id
-app.use("/", serviceRoutes);
+// === BỔ SUNG ROUTE /booking/:id ĐỂ KHẮC PHỤC LỖI Cannot GET /booking/1 ===
+app.get('/booking/:id', isAuthenticated, async (req, res) => {
+  const serviceId = parseInt(req.params.id, 10);
 
-// Đặt dịch vụ, thanh toán và lưu đơn hàng vào MySQL
-const checkoutRoutes = require('./js/checkout_routes');
-app.use('/', checkoutRoutes({ pool, PRODUCTS, SERVICES: PRODUCTS, isAuthenticated }));
+  try {
+    // Truy vấn trực tiếp bảng `products` trong database để không sợ bị rỗng dữ liệu
+    const [rows] = await pool.query('SELECT * FROM products WHERE id = ? LIMIT 1', [serviceId]);
 
-// Khu vực quản trị và cổng tạo đơn dành cho đối tác
-const createAdminRoutes = require('./js/admin_routes');
-app.use('/', createAdminRoutes({ pool }));
+    if (rows.length === 0) {
+      return res.status(404).send("Không tìm thấy dịch vụ hoặc sản phẩm để đặt lịch.");
+    }
 
-app.use((error, req, res, next) => {
-  console.error('Lỗi xử lý yêu cầu:', error);
-  if (res.headersSent) return next(error);
-  res.status(500).send('Hệ thống đang gặp lỗi. Vui lòng kiểm tra database hoặc thử lại sau.');
+    const found = rows[0];
+
+    // Chuẩn hóa object product đầy đủ giá và đường dẫn ảnh
+    const product = {
+      ...found,
+      title: found.name,
+      price: Number(found.price) || 0,
+      img: found.img || found.image || '',
+      image: found.img || found.image || ''
+    };
+
+    res.render('checkout.html', {
+      product,
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Lỗi tải trang booking:', error);
+    res.status(500).send('Lỗi truy vấn database');
+  }
 });
 
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server đang chạy thành công tại: http://localhost:${PORT}`);
-  });
-}
-// Trang admin
+// Các trang Quản trị (Admin)
 app.get("/admin", (req, res) => {
   res.render("admin/dashboard.html");
 });
@@ -698,7 +663,9 @@ app.get("/admin/report-review", (req, res) => {
 app.get("/admin/financial-payout", (req, res) => {
   res.render("admin/financial-payout.html");
 });
-app.get("/partner/:id", async (req, res) => {
+
+// Chi tiết đối tác: /partner/:id
+app.get('/partner/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id < 1) {
     return res.status(404).send("Không tìm thấy đối tác");
@@ -730,6 +697,28 @@ app.get("/partner/:id", async (req, res) => {
     return res.status(500).send("Lỗi truy vấn database");
   }
 });
-app.use("/admin-assets", express.static(path.join(__dirname, "views", "admin")))
+
+// Chi tiết dịch vụ: /services/:id
+app.use("/", serviceRoutes);
+
+// Đặt dịch vụ, thanh toán và lưu đơn hàng vào MySQL
+const checkoutRoutes = require('./js/checkout_routes');
+app.use('/', checkoutRoutes({ pool, PRODUCTS, SERVICES: PRODUCTS, isAuthenticated }));
+
+// Khu vực quản trị và cổng tạo đơn dành cho đối tác
+const createAdminRoutes = require('./js/admin_routes');
+app.use('/', createAdminRoutes({ pool }));
+
+app.use((error, req, res, next) => {
+  console.error('Lỗi xử lý yêu cầu:', error);
+  if (res.headersSent) return next(error);
+  res.status(500).send('Hệ thống đang gặp lỗi. Vui lòng kiểm tra database hoặc thử lại sau.');
+});
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server đang chạy thành công tại: http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
