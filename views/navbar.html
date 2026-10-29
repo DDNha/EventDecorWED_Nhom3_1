@@ -37,6 +37,16 @@
           <a id="username" class="btn btn-pill text-white btn-register dropdown-toggle"
              href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"></a>
           <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+            <li id="adminMenuItem" hidden="hidden">
+              <a class="dropdown-item" href="/admin">
+                <i class="fa-solid fa-gauge-high me-2"></i>Trung tâm quản trị
+              </a>
+            </li>
+            <li id="partnerMenuItem" hidden="hidden">
+              <a class="dropdown-item" href="/partner/orders/new">
+                <i class="fa-solid fa-file-circle-plus me-2"></i>Tạo đơn đối tác
+              </a>
+            </li>
             <li>
               <a class="dropdown-item" href="/profile">
                 <i class="fa-regular fa-user me-2"></i>Hồ sơ khách hàng
@@ -45,6 +55,11 @@
             <li>
               <a class="dropdown-item" href="/orders">
                 <i class="fa-solid fa-clock-rotate-left me-2"></i>Lịch sử thanh toán
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="/report">
+                <i class="fa-regular fa-message me-2"></i>Gửi phản ánh
               </a>
             </li>
           </ul>
@@ -69,6 +84,8 @@
       document.getElementById('login').hidden = true;
       document.getElementById('userMenu').hidden = false;
       document.getElementById('logout').hidden = false;
+      if (data.user.role === 'admin') document.getElementById('adminMenuItem').hidden = false;
+      if (data.user.role === 'partner') document.getElementById('partnerMenuItem').hidden = false;
     })
     .catch(err => {
       console.error('Lỗi lấy thông tin user:', err);

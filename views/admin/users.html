@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% block title %}Quản lý người dùng{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">TÀI KHOẢN & PHÂN QUYỀN</p><h1>Quản lý người dùng</h1><p>Tìm kiếm, phân vai trò và kiểm soát trạng thái tài khoản.</p></div></div>
+<section class="metric-grid compact">
+  <article class="metric-card"><span>Tổng tài khoản</span><strong>{{ summary.total or 0 }}</strong></article>
+  <article class="metric-card"><span>Đang hoạt động</span><strong>{{ summary.active_count or 0 }}</strong></article>
+  <article class="metric-card"><span>Đang bị khóa</span><strong>{{ summary.locked_count or 0 }}</strong></article>
+  <article class="metric-card"><span>Tài khoản đối tác</span><strong>{{ summary.partner_count or 0 }}</strong></article>
+</section>
+<section class="panel">
+  <form class="filter-bar" method="get" action="/admin/users">
+    <label class="search-field"><span>Tìm kiếm</span><input name="search" value="{{ filters.search }}" placeholder="Tên, email, số điện thoại..."></label>
+    <label><span>Vai trò</span><select name="role"><option value="">Tất cả</option><option value="user" {% if filters.role == 'user' %}selected{% endif %}>Khách hàng</option><option value="partner" {% if filters.role == 'partner' %}selected{% endif %}>Đối tác</option><option value="admin" {% if filters.role == 'admin' %}selected{% endif %}>Admin</option></select></label>
+    <label><span>Trạng thái</span><select name="status"><option value="">Tất cả</option><option value="active" {% if filters.status == 'active' %}selected{% endif %}>Hoạt động</option><option value="locked" {% if filters.status == 'locked' %}selected{% endif %}>Bị khóa</option></select></label>
+    <button class="btn primary" type="submit">Lọc dữ liệu</button><a class="btn ghost" href="/admin/users">Đặt lại</a>
+  </form>
+  <div class="table-wrap"><table><thead><tr><th>Người dùng</th><th>Liên hệ</th><th>Vai trò</th><th>Đơn hàng</th><th>Chi tiêu</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+    {% for item in users %}<tr>
+      <td><div class="user-cell"><span class="avatar small">{{ (item.full_name or item.username) | first | upper }}</span><span><b>{{ item.full_name or item.username }}</b><small>@{{ item.username }} · {{ item.created_text }}</small></span></div></td>
+      <td><b>{{ item.email }}</b><small class="block">{{ item.phone or 'Chưa cập nhật SĐT' }}</small></td>
+      <td><form class="inline-form" data-admin-action method="post" action="/admin/users/{{ item.id }}/role"><select name="role" aria-label="Vai trò của {{ item.full_name or item.username }}"><option value="user" {% if item.role == 'user' %}selected{% endif %}>Khách hàng</option><option value="partner" {% if item.role == 'partner' %}selected{% endif %}>Đối tác</option><option value="admin" {% if item.role == 'admin' %}selected{% endif %}>Admin</option></select><button class="icon-btn" type="submit" title="Lưu vai trò" aria-label="Lưu vai trò">✓</button></form></td>
+      <td>{{ item.order_count }}</td><td class="amount">{{ item.spent_text }}</td><td><span class="status status-{{ item.status }}">{% if item.status == 'active' %}Hoạt động{% else %}Bị khóa{% endif %}</span></td>
+      <td><form data-admin-action data-confirm="Xác nhận thay đổi trạng thái tài khoản này?" method="post" action="/admin/users/{{ item.id }}/status"><input type="hidden" name="status" value="{% if item.status == 'active' %}locked{% else %}active{% endif %}"><button class="btn tiny {% if item.status == 'active' %}danger{% else %}success{% endif %}" type="submit">{% if item.status == 'active' %}Khóa{% else %}Mở khóa{% endif %}</button></form></td>
+    </tr>{% else %}<tr><td class="empty-cell" colspan="7">Không tìm thấy tài khoản phù hợp.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}
+
