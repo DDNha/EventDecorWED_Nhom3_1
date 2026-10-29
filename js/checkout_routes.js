@@ -123,7 +123,7 @@ module.exports = function ({ pool, SERVICES, isAuthenticated }) {
           `SELECT oi.order_id, oi.service_id AS product_id, oi.quantity, oi.price,
                   s.title, s.image, pt.name AS partner
            FROM order_items oi
-           LEFT JOIN services s  ON s.id = oi.service_id
+            LEFT JOIN products s  ON s.id = oi.service_id
            LEFT JOIN partners pt ON pt.id = s.partner_id
            WHERE oi.order_id IN (?)`,
           [orderRows.map((o) => o.id)]
