@@ -1,6 +1,7 @@
 
 /* ============== GOOGLE CLIENT ID ============== */
-const GOOGLE_CLIENT_ID =
+const googleButtonElement = document.getElementById("googleBtn");
+const GOOGLE_CLIENT_ID = googleButtonElement?.dataset.clientId ||
   "921639641123-44j6hefhg2iobahvm24cdi3u290rabl0.apps.googleusercontent.com";
 
 
@@ -189,17 +190,29 @@ async function handleForgotPassword(e) {
 
 
 /* ============== GOOGLE SIGN-IN ============== */
-/*
-  Giữ Google Sign-In ở chế độ demo.
-  Muốn đăng nhập Google thật cần gửi credential lên backend
-  và xác minh token tại máy chủ.
-*/
-function handleGoogleCredentialResponse(response) {
-  console.log("Google ID Token đã nhận.");
+async function handleGoogleCredentialResponse(response) {
+  if (!response || !response.credential) {
+    return showMessage("error", "Không nhận được thông tin từ Google. Vui lòng thử lại.");
+  }
 
-  alert(
-    "Google Sign-In hiện chưa được kết nối với tài khoản website."
-  );
+  try {
+    const result = await fetch("/api/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ credential: response.credential })
+    });
+    const data = await result.json();
+
+    if (!result.ok) {
+      return showMessage("error", data.message || "Đăng nhập bằng Google thất bại.");
+    }
+
+    window.location.href = data.redirect || "/";
+  } catch (error) {
+    console.error("Lỗi đăng nhập Google:", error);
+    showMessage("error", "Không thể kết nối máy chủ. Vui lòng thử lại.");
+  }
 }
 
 function initGoogleSignIn() {

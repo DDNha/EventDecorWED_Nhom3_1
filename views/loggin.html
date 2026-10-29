@@ -1,13 +1,12 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng nhập</title>
-  <link rel="stylesheet" href="/css/loggin_style.css">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-</head>
-<body>
+
+
+{% block title %}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="/css/loggin_style.css" />
+{% endblock css %}
+
+{% block content %}
 <div class="container">
   <h2>Đăng nhập</h2>
   <p class="subtitle">Chào mừng bạn quay trở lại!</p>
@@ -32,12 +31,12 @@
   <div class="divider"><span>hoặc</span></div>
 
   <!-- Nút Google sẽ được render bởi Google SDK -->
-  <div id="googleBtn" style="display: flex; justify-content: center;"></div>
+  <div id="googleBtn" data-client-id="{{ googleClientId }}" style="display: flex; justify-content: center;"></div>
   <div class="links">
     Chưa có tài khoản? <a href="register">Đăng ký ngay</a>
   </div>
 </div>
 
 <script src="/js/auth.js"></script>
-</body>
-</html>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+{% endblock %}
