@@ -2,6 +2,7 @@ const express = require("express");
 
 // Giỏ hàng và checkout trong app.js vẫn đọc mảng này (chưa chuyển sang database).
 const SERVICES = [];
+let productsHasCategory;
 
 // Khoảng giá của bộ lọc "Mức giá" trên trang dịch vụ
 const PRICE_RANGES = {
@@ -28,6 +29,16 @@ function toService(row) {
   };
 }
 
+async function supportsProductCategory(pool) {
+  if (productsHasCategory !== undefined) return productsHasCategory;
+
+  const [columns] = await pool.query(
+    "SHOW COLUMNS FROM products LIKE 'category'",
+  );
+  productsHasCategory = columns.length > 0;
+  return productsHasCategory;
+}
+
 module.exports = function ({ pool }) {
   const router = express.Router();
 
@@ -38,13 +49,14 @@ module.exports = function ({ pool }) {
     const price = PRICE_RANGES[req.query.price] ? req.query.price : "";
 
     try {
+      const hasCategory = await supportsProductCategory(pool);
       const clauses = [];
       const params = [];
       if (q) {
         clauses.push("p.name LIKE ?");
         params.push(`%${q}%`);
       }
-      if (category) {
+      if (category && hasCategory) {
         clauses.push("p.category = ?");
         params.push(category);
       }
@@ -57,13 +69,15 @@ module.exports = function ({ pool }) {
          LEFT JOIN partners pt ON pt.id = p.partner_id
          ${where}
          ORDER BY p.id`,
-        params
+        params,
       );
-      const [categories] = await pool.query(
-        `SELECT DISTINCT category FROM products
-         WHERE category IS NOT NULL AND category <> ''
-         ORDER BY category`
-      );
+      const [categories] = hasCategory
+        ? await pool.query(
+            `SELECT DISTINCT category FROM products
+             WHERE category IS NOT NULL AND category <> ''
+             ORDER BY category`,
+          )
+        : [[]];
 
       res.render("eventservices.html", {
         services: rows.map(toService),
@@ -91,7 +105,7 @@ module.exports = function ({ pool }) {
          FROM products p
          LEFT JOIN partners pt ON pt.id = p.partner_id
          WHERE p.id = ?`,
-        [id]
+        [id],
       );
       if (!rows.length) {
         return res.status(404).send("Không tìm thấy dịch vụ");
@@ -100,7 +114,7 @@ module.exports = function ({ pool }) {
       const service = toService(rows[0]);
       const [inclusions] = await pool.query(
         "SELECT item_text FROM product_inclusions WHERE product_id = ? ORDER BY id",
-        [id]
+        [id],
       );
       service.includes = inclusions.map((i) => i.item_text);
 
@@ -110,12 +124,12 @@ module.exports = function ({ pool }) {
          LEFT JOIN users u ON u.id = r.user_id
          WHERE r.product_id = ?
          ORDER BY r.created_at DESC`,
-        [id]
+        [id],
       );
 
       const [related] = await pool.query(
         "SELECT * FROM products WHERE id <> ? ORDER BY id LIMIT 3",
-        [id]
+        [id],
       );
 
       res.render("service_detail.html", {
