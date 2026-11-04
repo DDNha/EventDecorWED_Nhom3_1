@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Đối Tác & Gian Hàng - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .admin-sidebar { background: #212529; min-height: 100vh; color: #fff; z-index: 1000; overflow-y: auto; }
+        .admin-sidebar .sidebar-heading { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #6c757d; font-weight: 700; margin-top: 1.2rem; margin-bottom: 0.5rem; }
+        .admin-sidebar .nav-link { color: #adb5bd; border-radius: 8px; padding: 10px 14px; font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease-in-out; }
+        .admin-sidebar .nav-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .admin-sidebar .nav-link.active { background: #0d6efd; color: #fff; font-weight: 600; }
+        .card-box { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: #fff; }
+        .fs-12 { font-size: 12px; }
+        .audit-img-preview { width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; border: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- SIDEBAR ĐIỀU HƯỚNG -->
+        <div class="col-md-3 col-lg-2 admin-sidebar p-3 position-fixed">
+            <h5 class="fw-bold text-white mb-3 pt-2">
+                <i class="fa-solid fa-shield-halved text-warning me-2"></i>ADMIN PANEL
+            </h5>
+            <div class="small text-muted mb-3 pb-2 border-bottom border-secondary">
+                Tài khoản: <strong class="text-white">{{ adminUser.username or 'seed_admin' }}</strong>
+            </div>
+
+            <div class="nav flex-column">
+                <div class="sidebar-heading px-2">Quản lý hệ thống</div>
+                
+                <a href="/admin/user-detail" class="nav-link mb-1 {% if current_path == '/admin/user-detail' %}active{% endif %}">
+                    <i class="fa-solid fa-users me-2"></i>Quản lý Người dùng
+                </a>
+                
+                <!-- Active tab Quản lý Đối tác -->
+                <a href="/admin/partners" class="nav-link mb-1 active">
+                    <i class="fa-solid fa-store me-2"></i>Quản lý Đối tác / Gian hàng
+                </a>
+                
+                <a href="/admin/products" class="nav-link mb-1">
+                    <i class="fa-solid fa-boxes-packing me-2"></i>Quản lý Sản phẩm / Dịch vụ
+                </a>
+                
+                <a href="/admin/orders" class="nav-link mb-1">
+                    <i class="fa-solid fa-file-invoice-dollar me-2"></i>Quản lý Đơn hàng & Lịch
+                </a>
+
+                <a href="/admin/tickets" class="nav-link mb-1">
+                    <i class="fa-solid fa-headset me-2"></i>Khiếu nại & Hỗ trợ
+                </a>
+
+                <div class="sidebar-heading px-2">Thống kê & Báo cáo</div>
+                
+                <a href="/admin/reports" class="nav-link mb-1">
+                    <i class="fa-solid fa-chart-line me-2"></i>Doanh thu & Hoa hồng
+                </a>
+                
+                <a href="/admin/payouts" class="nav-link mb-1">
+                    <i class="fa-solid fa-wallet me-2"></i>Thanh toán & Rút tiền
+                </a>
+
+                <div class="sidebar-heading px-2">Cài đặt & Điều hướng</div>
+                
+                <a href="/admin/settings" class="nav-link mb-1">
+                    <i class="fa-solid fa-gear me-2"></i>Cài đặt Hệ thống
+                </a>
+                
+                <hr class="border-secondary my-2">
+                
+                <a href="/" class="nav-link text-warning mb-1">
+                    <i class="fa-solid fa-house me-2"></i>Về trang chủ sàn
+                </a>
+            </div>
+        </div>
+
+        <!-- NỘI DUNG CHÍNH (MAIN CONTENT) -->
+        <div class="col-md-9 col-lg-10 ms-auto p-4">
+            <!-- HEADER TRÊN CÙNG -->
+            <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-3 shadow-sm">
+                <h4 class="fw-bold mb-0">Quản Lý Đối Tác & Gian Hàng</h4>
+                <a href="/logout" class="btn btn-outline-danger btn-sm">
+                    <i class="fa-solid fa-power-off me-1"></i>Đăng xuất
+                </a>
+            </div>
+
+            <!-- CARD BẢNG DANH SÁCH -->
+            <div class="card card-box p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fa-solid fa-store text-primary me-2"></i>Danh Sách Gian Hàng B2C
+                    </h5>
+                    <button class="btn btn-sm btn-primary" onclick="location.reload()">
+                        <i class="fa-solid fa-arrows-rotate me-1"></i>Làm mới
+                    </button>
+                </div>
+                
+                <!-- BỘ LỌC DỮ LIỆU -->
+                <div class="row g-2 mb-4 bg-light p-3 rounded-3 border">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                            <input type="text" id="searchInput" class="form-control" placeholder="Tìm theo Tên đối tác, MST, Email...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="statusFilter" class="form-select">
+                            <option value="">-- Tất cả Trạng thái --</option>
+                            <option value="active">🟢 Hoạt động</option>
+                            <option value="pending">🟡 Chờ thẩm định</option>
+                            <option value="locked">🔴 Bị khóa</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select id="commissionFilter" class="form-select">
+                            <option value="">-- Tất cả Mức Phí --</option>
+                            <option value="8">Hoa hồng 8%</option>
+                            <option value="10">Hoa hồng 10%</option>
+                            <option value="12">Hoa hồng 12%</option>
+                            <option value="15">Hoa hồng 15%</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-1">
+                        <button type="button" id="btnFilter" class="btn btn-primary w-100">
+                            <i class="fa-solid fa-filter me-1"></i> Lọc
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BẢNG DỮ LIỆU & BỘ CHỨA DỮ LIỆU -->
+<div id="vendorDataContainer" data-vendors='{{ vendorsData | dump | safe if vendorsData else "[]" }}'>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Thông tin Gian hàng</th>
+                    <th>Địa chỉ & Mô tả</th>
+                    <th class="text-center">Phí sàn</th>
+                    <th class="text-center">Trạng thái</th>
+                    <th class="text-center">Khóa</th>
+                    <th class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="vendorTableBody">
+                {% if vendorsData and vendorsData.length > 0 %}
+                    {% for vendor in vendorsData %}
+                    <tr>
+                        <td class="fw-bold">#{{ vendor.id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="{{ vendor.image or '/img/partners/default.png' }}" 
+                                     alt="{{ vendor.name }}" 
+                                     class="rounded-circle border" 
+                                     style="width: 40px; height: 40px; object-fit: cover;"
+                                     onerror="this.src='https://via.placeholder.com/40'">
+                                <div>
+                                    <div class="fw-bold text-dark">{{ vendor.name }}</div>
+                                    <div class="text-muted fs-12">{{ vendor.email }} | {{ vendor.phone }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ vendor.address or 'Chưa cập nhật' }}</div>
+                            <div class="text-muted fs-12 text-truncate" style="max-width: 220px;" title="{{ vendor.description }}">
+                                {{ vendor.description or 'Chưa có mô tả' }}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="fw-bold text-dark">{{ vendor.commissionRate or '10' }}%</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Hoạt động</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check form-switch d-inline-block">
+                                <input class="form-check-input" type="checkbox" role="switch" id="switch-{{ vendor.id }}" 
+       {% if vendor.isLocked %}checked{% endif %} 
+       onchange="toggleLockVendor('{{ vendor.id }}', this.checked)">
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="openLegalAuditModal({{ vendor.id }})" title="Xem chi tiết">
+                                    <i class="fa-solid fa-eye me-1"></i>Chi tiết
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="openCommissionModal({{ vendor.id }}, '{{ vendor.commissionRate or 10 }}')" title="Chỉnh phí sàn">
+                                    <i class="fa-solid fa-percent"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            Không có đối tác/gian hàng nào trong cơ sở dữ liệu.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 1. MODAL THẨM ĐỊNH HỒ SƠ NĂNG LỰC ĐỐI TÁC -->
+<div class="modal fade" id="legalAuditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa-solid fa-file-signature text-warning me-2"></i>Thẩm Định Hồ Sơ Năng Lực Đối Tác
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- THÔNG TIN PHÁP LÝ -->
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">1. Thông Tin Pháp Lý & Đại Diện</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted fs-12">Tên Gian hàng / Công ty:</p>
+                        <strong id="modalPartnerName" class="fs-6 text-dark">-</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted fs-12">Mã số thuế (MST):</p>
+                        <strong id="modalTaxCode" class="fs-6 text-primary font-monospace">-</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted fs-12">Người đại diện pháp luật:</p>
+                        <span id="modalLegalRep" class="fw-semibold">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted fs-12">Liên hệ & Địa chỉ:</p>
+                        <span id="modalContact" class="fw-semibold">-</span>
+                    </div>
+                </div>
+
+                <!-- HÌNH ẢNH GIẤY PHÉP & CCCD -->
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">2. Giấy Phép ĐKKD & CCCD Người Đại Diện</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <p class="fw-semibold mb-2 fs-12 text-muted">Giấy phép đăng ký kinh doanh:</p>
+                        <img id="imgLicense" src="" alt="ĐKKD" class="img-fluid rounded border shadow-sm" style="max-height: 200px; width: 100%; object-fit: contain;">
+                    </div>
+                    <div class="col-md-6">
+                        <p class="fw-semibold mb-2 fs-12 text-muted">Ảnh CCCD / ĐKKD cá nhân:</p>
+                        <img id="imgIdCard" src="" alt="CCCD" class="img-fluid rounded border shadow-sm" style="max-height: 200px; width: 100%; object-fit: contain;">
+                    </div>
+                </div>
+
+                <!-- DANH MỤC THIẾT BỊ/SẢNH TIỆC SỞ HỮU -->
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">3. Danh Mục Thiết Bị & Cơ Sở Vật Tư Sở Hữu</h6>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tên thiết bị / Hạng mục</th>
+                                <th>Phân loại</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-center">Tình trạng</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalEquipBody">
+                            <!-- JS Render danh mục thiết bị -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- KHUNG NHẬP LÝ DO TỪ CHỐI (ẨN MẶC ĐỊNH) -->
+                <div id="rejectReasonBox" class="mt-3 p-3 bg-danger-subtle rounded-3 border border-danger d-none">
+                    <label class="form-label fw-bold text-danger">Lý do từ chối phê duyệt (Sẽ gửi thông báo cho đối tác):</label>
+                    <textarea id="rejectReasonInput" class="form-control" rows="3" placeholder="Ví dụ: Giấy phép ĐKKD bị mờ, Mã số thuế không trùng khớp..."></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" id="btnToggleRejectReason" class="btn btn-outline-danger" onclick="toggleRejectInput()">
+                    <i class="fa-solid fa-xmark me-1"></i>Từ chối
+                </button>
+                <button type="button" id="btnConfirmReject" class="btn btn-danger d-none" onclick="confirmReject()">
+                    <i class="fa-solid fa-paper-plane me-1"></i>Xác nhận từ chối
+                </button>
+                <button type="button" class="btn btn-success" onclick="approveLegal()">
+                    <i class="fa-solid fa-circle-check me-1"></i>Phê duyệt gian hàng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. MODAL CẤU HÌNH PHÍ SÀN -->
+<div class="modal fade" id="commissionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-percent text-primary me-2"></i>Điều Chỉnh Tỷ Lệ Phí Sàn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="commissionPartnerId">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Chọn tỷ lệ hoa hồng chiết khấu:</label>
+                    <select id="commissionSelect" class="form-select form-select-lg">
+                        <option value="5">5% (Đối tác chiến lược)</option>
+                        <option value="8">8% (Mức ưu đãi)</option>
+                        <option value="10">10% (Mức tiêu chuẩn)</option>
+                        <option value="12">12% (Mức cao)</option>
+                        <option value="15">15% (Mức đặc biệt)</option>
+                    </select>
+                </div>
+                <p class="text-muted fs-12 mb-0">Tỷ lệ phí sàn sẽ được áp dụng trực tiếp cho các đơn hàng phát sinh mới của gian hàng này.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="saveCommission()">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. SCRIPT XỬ LÝ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let vendorsData = [];
+    let selectedVendorId = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const container = document.getElementById('vendorDataContainer');
+        try {
+            const rawData = container ? container.getAttribute('data-vendors') : '[]';
+            vendorsData = JSON.parse(rawData || '[]');
+        } catch (e) {
+            console.error("Lỗi parse JSON dữ liệu đối tác:", e);
+            vendorsData = [];
+        }
+
+        const btnFilter = document.getElementById("btnFilter");
+        if (btnFilter) {
+            btnFilter.addEventListener("click", applyFilters);
+        }
+    });
+
+    function renderVendorTable(data) {
+        const tbody = document.getElementById("vendorTableBody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Không tìm thấy đối tác nào.</td></tr>`;
+            return;
+        }
+
+        data.forEach(vendor => {
+            const id = vendor.id;
+            const name = vendor.name || 'Chưa đặt tên';
+            const email = vendor.email || 'Chưa cập nhật';
+            const phone = vendor.phone || 'Chưa cập nhật';
+            const address = vendor.address || 'Chưa cập nhật';
+            const description = vendor.description || 'Chưa có mô tả';
+            const image = vendor.image || '/img/partners/default.png';
+            const commission = vendor.commissionRate || 10;
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td class="fw-bold">#${id}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="${image}" alt="${name}" class="rounded-circle border" style="width: 40px; height: 40px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/40'">
+                        <div>
+                            <div class="fw-bold text-dark">${name}</div>
+                            <div class="text-muted fs-12">${email} | ${phone}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="fw-semibold text-dark">${address}</div>
+                    <div class="text-muted fs-12 text-truncate" style="max-width: 220px;" title="${description}">${description}</div>
+                </td>
+                <td class="text-center">
+                    <span class="fw-bold text-dark">${commission}%</span>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Hoạt động</span>
+                </td>
+                <td class="text-center">
+                    <div class="form-check form-switch d-inline-block">
+                        <input class="form-check-input" type="checkbox" role="switch" id="switch-${id}" ${vendor.isLocked ? 'checked' : ''} onchange="toggleLockVendor(${id}, this.checked)">
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="openLegalAuditModal(${id})" title="Xem chi tiết">
+                            <i class="fa-solid fa-eye me-1"></i>Chi tiết
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="openCommissionModal(${id}, ${commission})" title="Chỉnh phí sàn">
+                            <i class="fa-solid fa-percent"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Bật Modal Thẩm định
+    function openLegalAuditModal(vendorId) {
+        selectedVendorId = vendorId;
+        const vendor = vendorsData.find(v => v.id === vendorId);
+        if (!vendor) return;
+
+        // Điền dữ liệu cơ bản
+        document.getElementById("modalPartnerName").innerText = vendor.name || 'Chưa cập nhật';
+        document.getElementById("modalTaxCode").innerText = vendor.taxCode || 'Chưa cập nhật';
+        document.getElementById("modalLegalRep").innerText = vendor.legalRep || 'Chưa cập nhật';
+        document.getElementById("modalContact").innerText = (vendor.phone || 'N/A') + " - " + (vendor.address || 'N/A');
+        
+        document.getElementById("imgLicense").src = vendor.licenseImage || vendor.image || 'https://via.placeholder.com/200';
+        document.getElementById("imgIdCard").src = vendor.idCardImage || vendor.image || 'https://via.placeholder.com/200';
+
+        // Render thiết bị sở hữu
+        const equipBody = document.getElementById("modalEquipBody");
+        equipBody.innerHTML = "";
+        if (vendor.equipments && vendor.equipments.length > 0) {
+            vendor.equipments.forEach(item => {
+                equipBody.innerHTML += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.category || 'Mặc định'}</td>
+                        <td class="text-center">${item.quantity || 1}</td>
+                        <td class="text-center"><span class="badge bg-info">${item.status || 'Tốt'}</span></td>
+                    </tr>
+                `;
+            });
+        } else {
+            equipBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted fs-12 py-2">Chưa cập nhật danh mục thiết bị</td></tr>`;
+        }
+
+        // Reset ô từ chối
+        document.getElementById("rejectReasonBox").classList.add("d-none");
+        document.getElementById("btnConfirmReject").classList.add("d-none");
+        document.getElementById("btnToggleRejectReason").classList.remove("d-none");
+
+        const modalEl = document.getElementById('legalAuditModal');
+        if (modalEl) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    }
+
+    // Bật Modal Phí sàn
+    function openCommissionModal(vendorId, currentCommission) {
+        document.getElementById("commissionPartnerId").value = vendorId;
+        document.getElementById("commissionSelect").value = currentCommission || 10;
+        const modalEl = document.getElementById('commissionModal');
+        if (modalEl) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    }
+
+    // Xử lý các thao tác Từ chối / Phê duyệt / Khóa
+    function toggleRejectInput() {
+        document.getElementById("rejectReasonBox").classList.toggle("d-none");
+        document.getElementById("btnConfirmReject").classList.toggle("d-none");
+        document.getElementById("btnToggleRejectReason").classList.toggle("d-none");
+    }
+
+    function confirmReject() {
+        const reason = document.getElementById("rejectReasonInput").value.trim();
+        if (!reason) {
+            alert("Vui lòng nhập lý do từ chối!");
+            return;
+        }
+        alert(`Đã từ chối gian hàng #${selectedVendorId}. Lý do: ${reason}`);
+        bootstrap.Modal.getInstance(document.getElementById('legalAuditModal')).hide();
+    }
+
+    function approveLegal() {
+        alert(`Đã phê duyệt gian hàng #${selectedVendorId} thành công!`);
+        bootstrap.Modal.getInstance(document.getElementById('legalAuditModal')).hide();
+    }
+
+    function saveCommission() {
+        const vendorId = document.getElementById("commissionPartnerId").value;
+        const rate = document.getElementById("commissionSelect").value;
+        alert(`Đã cập nhật phí sàn gian hàng #${vendorId} thành ${rate}%`);
+        bootstrap.Modal.getInstance(document.getElementById('commissionModal')).hide();
+    }
+
+    function toggleLockVendor(vendorId, isLocked) {
+        alert((isLocked ? 'Khóa' : 'Mở khóa') + ' gian hàng #' + vendorId + ' thành công!');
+    }
+
+    function applyFilters() {
+        const searchInput = document.getElementById("searchInput");
+        const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+        const filtered = vendorsData.filter(v => {
+            return (v.name && v.name.toLowerCase().includes(searchVal)) || 
+                   (v.email && v.email.toLowerCase().includes(searchVal)) ||
+                   (v.phone && v.phone.includes(searchVal)) ||
+                   (v.address && v.address.toLowerCase().includes(searchVal));
+        });
+
+        renderVendorTable(filtered);
+    }
+</script>
+
+</body>
+</html>
