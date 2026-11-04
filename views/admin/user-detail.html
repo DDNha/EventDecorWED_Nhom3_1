@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Điều Khiển Quản Trị Viên - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .admin-sidebar { background: #212529; min-height: 100vh; color: #fff; z-index: 1000; overflow-y: auto; }
+        .admin-sidebar .sidebar-heading { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #6c757d; font-weight: 700; margin-top: 1.2rem; margin-bottom: 0.5rem; }
+        .admin-sidebar .nav-link { color: #adb5bd; border-radius: 8px; padding: 10px 14px; font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease-in-out; }
+        .admin-sidebar .nav-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .admin-sidebar .nav-link.active { background: #0d6efd; color: #fff; font-weight: 600; }
+        .card-box { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- SIDEBAR ĐIỀU HƯỚNG TỰ ĐỘNG HIGHLIGHT THEO ROUTE -->
+        <div class="col-md-3 col-lg-2 admin-sidebar p-3 position-fixed">
+            <h5 class="fw-bold text-white mb-3 pt-2">
+                <i class="fa-solid fa-shield-halved text-warning me-2"></i>ADMIN PANEL
+            </h5>
+            <div class="small text-muted mb-3 pb-2 border-bottom border-secondary">
+                Tài khoản: <strong class="text-white">{{ adminUser.username or 'seed_admin' }}</strong>
+            </div>
+
+            <div class="nav flex-column">
+                <!-- NHÓM 1: QUẢN LÝ HỆ THỐNG -->
+                <div class="sidebar-heading px-2">Quản lý hệ thống</div>
+                
+                <a href="/admin/user-detail" class="nav-link mb-1 {% if current_path == '/admin/user-detail' or request.path == '/admin/user-detail' %}active{% endif %}">
+                    <i class="fa-solid fa-users me-2"></i>Quản lý Người dùng
+                </a>
+                
+                <a href="/admin/partners" class="nav-link mb-1">
+    <i class="fa-solid fa-store me-2"></i>Quản lý Đối tác / Gian hàng
+</a>
+                
+                <a href="/admin/products" class="nav-link mb-1 {% if current_path == '/admin/products' or request.path == '/admin/products' %}active{% endif %}">
+                    <i class="fa-solid fa-boxes-packing me-2"></i>Quản lý Sản phẩm / Dịch vụ
+                </a>
+                
+                <a href="/admin/orders" class="nav-link mb-1 {% if current_path == '/admin/orders' or request.path == '/admin/orders' %}active{% endif %}">
+                    <i class="fa-solid fa-file-invoice-dollar me-2"></i>Quản lý Đơn hàng & Lịch
+                </a>
+
+                <a href="/admin/tickets" class="nav-link mb-1 {% if current_path == '/admin/tickets' or request.path == '/admin/tickets' %}active{% endif %}">
+                    <i class="fa-solid fa-headset me-2"></i>Khiếu nại & Hỗ trợ
+                </a>
+
+                <!-- NHÓM 2: THỐNG KÊ & BÁO CÁO -->
+                <div class="sidebar-heading px-2">Thống kê & Báo cáo</div>
+                
+              <li class="menu-item">
+    <li class="nav-item">
+        <a href="/admin/commissions" class="nav-link mb-1 {% if current_path == '/admin/commissions' or request.path == '/admin/commissions' %}active{% endif %}">
+            <i class="fa-solid fa-chart-line me-2"></i>Doanh thu & Hoa hồng
+        </a>
+    </li>
+                
+                <a href="/admin/payouts" class="nav-link mb-1 {% if current_path == '/admin/payouts' or request.path == '/admin/payouts' %}active{% endif %}">
+                    <i class="fa-solid fa-wallet me-2"></i>Thanh toán & Rút tiền
+                </a>
+
+                <!-- NHÓM 3: CÀI ĐẶT & ĐIỀU HƯỚNG -->
+                <div class="sidebar-heading px-2">Cài đặt & Điều hướng</div>
+                
+               <a href="/admin/admin-settings.html" class="nav-link mb-1 {% if request.path == '/admin/admin-settings.html' %}active{% endif %}">
+    <i class="fa-solid fa-gear me-2"></i>Cài đặt Hệ thống
+</a>
+                
+                <hr class="border-secondary my-2">
+                
+                <a href="/" class="nav-link text-warning mb-1">
+                    <i class="fa-solid fa-house me-2"></i>Về trang chủ sàn
+                </a>
+            </div>
+        </div>
+
+        <!-- NỘI DUNG CHÍNH (MAIN CONTENT) -->
+        <div class="col-md-9 col-lg-10 ms-auto p-4">
+            <!-- HEADER TRÊN CÙNG -->
+            <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-3 shadow-sm">
+                <h4 class="fw-bold mb-0">Bảng Điều Khiển Quản Trị Viên</h4>
+                <a href="/logout" class="btn btn-outline-danger btn-sm">
+                    <i class="fa-solid fa-power-off me-1"></i>Đăng xuất
+                </a>
+            </div>
+
+            <!-- BẢNG DANH SÁCH NGƯỜI DÙNG -->
+            <div class="card card-box p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fa-solid fa-users text-primary me-2"></i>Danh sách Khách hàng & Đối tác
+                    </h5>
+                    <span class="badge bg-primary px-3 py-2 fs-6">Tổng: {{ users.length or users|length or 0 }} người dùng</span>
+                </div>
+                
+                <!-- KHUNG TÌM KIẾM VÀ BỘ LỌC -->
+                <form action="/admin/user-detail" method="GET" class="row g-2 mb-4 bg-light p-3 rounded-3 border">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                            <input type="text" name="search" class="form-control" placeholder="Tìm theo Tên, Email hoặc ID..." value="{{ queryParams.search or '' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="role" class="form-select">
+                            <option value="">-- Tất cả Vai trò --</option>
+                            <option value="admin" {% if queryParams.role == 'admin' %}selected{% endif %}>Quản trị viên (Admin)</option>
+                            <option value="partner" {% if queryParams.role == 'partner' %}selected{% endif %}>Đối tác (Partner)</option>
+                            <option value="customer" {% if queryParams.role == 'customer' %}selected{% endif %}>Khách hàng (Customer)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="status" class="form-select">
+                            <option value="">-- Trạng thái --</option>
+                            <option value="active" {% if queryParams.status == 'active' %}selected{% endif %}>🟢 Hoạt động</option>
+                            <option value="banned" {% if queryParams.status == 'banned' %}selected{% endif %}>🔴 Đã khóa</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-1">
+                        <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-filter me-1"></i> Lọc</button>
+                        <a href="/admin/user-detail" class="btn btn-outline-secondary" title="Xóa bộ lọc"><i class="fa-solid fa-rotate-left"></i></a>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên người dùng</th>
+                                <th>Email liên hệ</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th class="text-end pe-3">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                                <tr>
+                                    <td>#{{ u.id }}</td>
+                                    <td><strong>{{ u.username }}</strong></td>
+                                    <td>{{ u.email }}</td>
+                                    <td>
+                                        {% if u.role == 'admin' or u.username == 'seed_admin' or u.email == 'admin.seed@eventdecor.test' %}
+                                            <span class="badge bg-danger text-white"><i class="fa-solid fa-user-shield me-1"></i>Quản trị viên</span>
+                                        {% elif u.role == 'partner' or (u.username and 'partner' in u.username) %}
+                                            <span class="badge bg-info text-dark"><i class="fa-solid fa-store me-1"></i>Đối tác</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary"><i class="fa-solid fa-user me-1"></i>Khách hàng</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <!-- ĐÃ BỔ SUNG: Render hiển thị Cột Trạng Thái -->
+                                    <td>
+                                        {% if u.status == 'banned' or u.status == 'locked' %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger">Bị khóa</span>
+                                        {% else %}
+                                            <span class="badge bg-success-subtle text-success border border-success">Hoạt động</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-end pe-3">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/admin/user-detail/{{ u.id }}" class="btn btn-outline-primary">
+                                                <i class="fa-solid fa-eye"></i> Xem
+                                            </a>    
+                                                
+                                            {% if u.username != 'seed_admin' %}
+                                                <form action="/admin/users/toggle-lock/{{ u.id }}" method="POST" class="d-inline">
+                                                    {% if u.status == 'banned' or u.status == 'locked' %}
+                                                        <button type="submit" class="btn btn-outline-success">
+                                                            <i class="fa-solid fa-lock-open"></i> Mở
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="submit" class="btn btn-outline-warning text-dark">
+                                                            <i class="fa-solid fa-lock"></i> Khóa
+                                                        </button>
+                                                    {% endif %}
+                                                </form>
+                                                <form action="/admin/users/delete/{{ u.id }}" method="POST" class="d-inline" onsubmit="return confirm('Xóa {{ u.username }}?');">
+                                                    <button type="submit" class="btn btn-outline-danger">
+                                                        <i class="fa-solid fa-trash"></i> Xóa
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">Không tìm thấy người dùng phù hợp với điều kiện tìm kiếm.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
+</body>
+</html>
