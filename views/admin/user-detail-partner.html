@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ Nhà Cung Cấp - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        .admin-sidebar { 
+            background: #1e2229; 
+            min-height: 100vh; 
+            color: #fff; 
+        }
+        .admin-sidebar .user-info {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #ffffff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .admin-sidebar .nav-link-home { 
+            color: #ffc107; 
+            font-weight: 700; 
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            font-size: 0.95rem;
+        }
+        .admin-sidebar .nav-link-home:hover { 
+            color: #e0a800; 
+        }
+
+        .card-box { 
+            border: none; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04); 
+            background: #fff; 
+        }
+        .avatar-partner {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+        }
+        .stat-card {
+            border-left: 4px solid;
+            border-radius: 8px;
+        }
+        .stat-card-blue { border-left-color: #0dcaf0; }
+        .stat-card-yellow { border-left-color: #ffc107; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- SIDEBAR CHỈ CÒN NÚT VỀ TRANG CHỦ -->
+        <div class="col-md-3 col-lg-2 admin-sidebar p-3 position-fixed">
+            <h5 class="fw-bold text-white mb-3 pt-2 d-flex align-items-center">
+                <i class="fa-solid fa-shield-halved text-warning me-2 fs-4"></i>ADMIN PANEL
+            </h5>
+
+            <div class="user-info pb-3 mb-4 text-center">
+                {{ adminUser.username or 'seed_admin' }}
+            </div>
+            
+            <div class="mt-4 pt-2">
+                <a href="/" class="nav-link-home">
+                    <i class="fa-solid fa-house me-2 fs-5"></i>Về trang chủ
+                </a>
+            </div>
+        </div>
+
+        <!-- CỘT NỘI DUNG CHÍNH -->
+        <div class="col-md-9 col-lg-10 ms-auto p-4">
+            
+            <!-- HEADER -->
+            <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-3 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <a href="/admin" class="btn btn-outline-secondary btn-sm me-3 px-3">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Trở về
+                    </a>
+                    <h4 class="fw-bold mb-0 text-dark">
+                        Hồ sơ Nhà Cung Cấp: {{ user.username }}
+                    </h4>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-info text-dark px-3 py-2 fw-bold">PARTNER-ID: #{{ user.id }}</span>
+                    <a href="/logout" class="btn btn-outline-danger btn-sm px-3">
+                        <i class="fa-solid fa-power-off me-1"></i>Đăng xuất
+                    </a>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- KHỐI TÀI KHOẢN & TÁC ĐỘNG QUẢN TRỊ -->
+                <div class="col-lg-4">
+                    <div class="card card-box p-4 text-center">
+                        <div class="mb-3">
+                            <img src="{{ user.avatar or 'https://via.placeholder.com/80?text=Partner' }}" 
+                                 alt="Avatar" 
+                                 class="avatar-partner rounded-circle border p-1">
+                        </div>
+                        
+                        <h4 class="fw-bold text-dark mb-1">{{ user.username }}</h4>
+                        <p class="text-muted small mb-1">
+                            <i class="fa-regular fa-envelope me-1"></i>{{ user.email }}
+                        </p>
+                        <p class="text-muted small mb-3">
+                            <i class="fa-solid fa-phone me-1"></i>{{ user.phone or 'Chưa cập nhật' }}
+                        </p>
+
+                        <div class="d-flex justify-content-center gap-2 mb-4">
+                            <span class="badge bg-info text-dark px-3 py-2">
+                                <i class="fa-solid fa-store me-1"></i>Đối tác Cung cấp Dịch vụ
+                            </span>
+                            {% if user.status == 'banned' %}
+                                <span class="badge bg-danger px-3 py-2">🔴 Đã khóa</span>
+                            {% else %}
+                                <span class="badge bg-success px-3 py-2">🟢 Hoạt động</span>
+                            {% endif %}
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="text-start">
+                            <h6 class="fw-bold text-secondary text-uppercase small mb-3">TÁC ĐỘNG QUẢN TRỊ ADMIN</h6>
+                            <form action="/admin/users/toggle-lock/{{ user.id }}" method="POST">
+                                {% if user.status == 'banned' %}
+                                    <button type="submit" class="btn btn-outline-success w-100 py-2 fw-semibold">
+                                        <i class="fa-solid fa-lock-open me-1"></i>Mở hoạt động gian hàng
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-outline-warning text-dark w-100 py-2 fw-semibold border-warning">
+                                        <i class="fa-solid fa-lock me-1"></i>Khóa hoạt động gian hàng
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- THỐNG KÊ & BẢNG SẢN PHẨM DỰA TRÊN BIẾN products -->
+                <div class="col-lg-8">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="card card-box p-3 stat-card stat-card-blue">
+                                <div class="text-secondary small fw-bold text-uppercase">SỐ GÓI DỊCH VỤ ĐĂNG BÁN</div>
+                                <div class="fs-4 fw-bold text-info mt-1">
+                                    {{ products.length or 0 }} sản phẩm
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card card-box p-3 stat-card stat-card-yellow">
+                                <div class="text-secondary small fw-bold text-uppercase">YÊU CẦU RÚT TIỀN (PAYOUTS)</div>
+                                <div class="fs-4 fw-bold text-warning mt-1">
+                                    {{ payouts.length or 0 }} lượt
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-box p-4">
+                        <h6 class="fw-bold text-dark mb-3">
+                            <i class="fa-solid fa-boxes-packing text-info me-2"></i>Các gói dịch vụ Đối tác đang đăng trên Sàn
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr class="text-secondary small">
+                                        <th style="width: 90px;">Mã SP</th>
+                                        <th>Tên gói dịch vụ</th>
+                                        <th>Giá niêm yết</th>
+                                        <th>Danh mục</th>
+                                        <th class="text-end pe-3">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in products %}
+                                        <tr>
+                                            <td class="fw-bold">#SP-{{ p.id }}</td>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ p.name }}</div>
+                                            </td>
+                                            <td class="fw-bold text-success">
+                                                {{ p.price.toLocaleString('vi-VN') if p.price else '0' }} ₫
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border">{{ p.category or 'Gói dịch vụ' }}</span>
+                                            </td>
+                                            <td class="text-end pe-3">
+                                                <form action="/admin/products/delete/{{ p.id }}" method="POST" class="d-inline" onsubmit="return confirm('Xóa gói dịch vụ này?');">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                        <i class="fa-solid fa-trash me-1"></i>Xóa
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4">
+                                                Đối tác này chưa đăng gói sản phẩm nào.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
+</body>
+</html>
