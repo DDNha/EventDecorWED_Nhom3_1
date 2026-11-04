@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Chi tiết Khách hàng: {{ user.username }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .admin-sidebar { background: #212529; min-height: 100vh; color: #fff; }
+        .admin-sidebar .nav-link { color: #adb5bd; margin-bottom: 6px; border-radius: 8px; padding: 12px 16px; }
+        .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active { background: #0d6efd; color: #fff; }
+        .card-box { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- SIDEBAR ADMIN -->
+        <div class="col-md-3 col-lg-2 admin-sidebar p-3 position-fixed">
+            <h5 class="fw-bold text-white mb-4 pt-2"><i class="fa-solid fa-shield-halved text-warning me-2"></i>ADMIN PANEL</h5>
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item">
+                    <a href="/admin/user-detail" class="nav-link active"><i class="fa-solid fa-users me-2"></i>Quản lý Người dùng</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/" class="nav-link text-warning mt-3"><i class="fa-solid fa-house me-2"></i>Về trang chủ</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- NỘI DUNG XEM KHÁCH HÀNG -->
+        <div class="col-md-9 col-lg-10 ms-auto p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-3 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <a href="/admin/user-detail" class="btn btn-outline-secondary me-3"><i class="fa-solid fa-arrow-left me-1"></i> Trở về</a>
+                    <h4 class="fw-bold mb-0">Hồ sơ Khách hàng: {{ user.username }}</h4>
+                </div>
+                <span class="badge bg-secondary font-monospace fs-6">CUSTOMER-ID: #{{ user.id }}</span>
+            </div>
+
+            <div class="row g-4">
+                <!-- THÔNG TIN KHÁCH HÀNG -->
+                <div class="col-lg-4">
+                    <div class="card card-box p-4 text-center">
+                        <div class="display-4 text-secondary mb-2"><i class="fa-solid fa-circle-user"></i></div>
+                        <h5 class="fw-bold mb-1">{{ user.username }}</h5>
+                        <p class="text-muted small mb-3">{{ user.email }}</p>
+
+                        <div class="mb-3">
+                            <span class="badge bg-secondary px-3 py-2">Khách hàng cá nhân</span>
+                            {% if user.status == 'banned' or user.status == 'locked' %}
+                                <span class="badge bg-danger px-3 py-2">🔴 Đã khóa</span>
+                            {% elif user.status == 'pending' %}
+                                <span class="badge bg-warning text-dark px-3 py-2">🟡 Chờ duyệt</span>
+                            {% else %}
+                                <span class="badge bg-success px-3 py-2">🟢 Hoạt động</span>
+                            {% endif %}
+                        </div>
+
+                        <hr>
+                        <h6 class="text-start fw-bold small text-muted mb-3">THAO TÁC QUẢN TRỊ</h6>
+                        <form action="/admin/users/toggle-lock/{{ user.id }}" method="POST">
+                            {% if user.status == 'banned' or user.status == 'locked' %}
+                                <button type="submit" class="btn btn-success w-100"><i class="fa-solid fa-lock-open me-2"></i> Mở khóa tài khoản</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-outline-warning text-dark w-100"><i class="fa-solid fa-lock me-2"></i> Khóa tài khoản</button>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+
+                <!-- CHỈ SỐ VÀ TAB ĐƠN HÀNG MUA -->
+                <div class="col-lg-8">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="card card-box p-3 border-start border-4 border-primary">
+                                <span class="text-muted small fw-bold">TỔNG TIỀN ĐÃ CHI TỰA/MUA</span>
+                                <h4 class="fw-bold text-primary mb-0 mt-1">{{ metrics.totalSpent | currency }} ₫</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card card-box p-3 border-start border-4 border-success">
+                                <span class="text-muted small fw-bold">SỐ ĐƠN TIỆC ĐÃ ĐẶT</span>
+                                <h4 class="fw-bold text-success mb-0 mt-1">{{ metrics.totalOrders if metrics.totalOrders else 0 }} đơn</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-box p-4">
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Lịch sử đặt đơn của Khách hàng</h6>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Mã đơn</th>
+                                        <th>Địa điểm tiệc</th>
+                                        <th>Ngày tổ chức</th>
+                                        <th>Giá trị</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for o in orders %}
+                                        <tr>
+                                            <td><strong>#ORD-{{ o.id }}</strong></td>
+                                            <td><small>{{ o.event_location if o.event_location else 'Chưa cập nhật' }}</small></td>
+                                            <td>{{ o.event_date }}</td>
+                                            <td class="fw-bold text-primary">{{ o.final_amount | currency }} ₫</td>
+                                            <td>
+                                                {% if o.status == 'completed' %}
+                                                    <span class="badge bg-success">Hoàn thành</span>
+                                                {% elif o.status == 'pending' %}
+                                                    <span class="badge bg-warning text-dark">Chờ xử lý</span>
+                                                {% elif o.status == 'cancelled' %}
+                                                    <span class="badge bg-danger">Đã hủy</span>
+                                                {% else %}
+                                                    <span class="badge bg-info text-dark">{{ o.status }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-3">Khách hàng chưa mua đơn dịch vụ nào.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
+</body>
+</html>
