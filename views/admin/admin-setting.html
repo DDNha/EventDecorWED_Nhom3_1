@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Cài Đặt Hệ Thống</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; min-height: 100vh; }
+        
+        /* Sidebar Admin */
+        .admin-sidebar { width: 250px; min-height: 100vh; background-color: #1e2229; padding: 20px 15px; color: #abb2bf; display: flex; flex-direction: column; }
+        .sidebar-brand { display: flex; align-items: center; gap: 8px; }
+        .brand-icon { color: #ffc107; font-size: 20px; }
+        .brand-title { color: #ffffff; font-weight: 800; font-size: 18px; }
+        .sidebar-user { font-size: 13px; color: #ffffff; font-weight: 600; margin-left: 28px; }
+        .sidebar-divider { border-color: rgba(255, 255, 255, 0.1); margin: 15px 0; }
+        .sidebar-menu { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .menu-header { font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; margin-top: 15px; margin-bottom: 8px; padding-left: 10px; }
+        .menu-link { display: flex; align-items: center; padding: 10px 12px; color: #c2c7d0; text-decoration: none; font-size: 14px; border-radius: 8px; }
+        .menu-link:hover { background-color: rgba(255, 255, 255, 0.08); color: #ffffff; }
+        .menu-link.active { background-color: #0d6efd; color: #ffffff; font-weight: 600; box-shadow: 0 2px 6px rgba(13, 110, 253, 0.4); }
+        .menu-icon { width: 20px; margin-right: 10px; text-align: center; }
+        .home-link { color: #ffc107; text-decoration: none; font-weight: 700; font-size: 14px; padding: 8px 10px; display: flex; align-items: center; }
+        
+        .main-content { background-color: #f8f9fa; }
+        .card-custom { border-radius: 12px; }
+        .fs-12 { font-size: 12px; }
+        .nav-tabs .nav-link { color: #495057; font-weight: 600; border-radius: 8px 8px 0 0; }
+        .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="d-flex">
+        <!-- SIDEBAR ADMIN CHUẨN -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-shield-halved brand-icon"></i>
+                <span class="brand-title">ADMIN PANEL</span>
+            </div>
+            <div class="sidebar-user">seed_admin</div>
+            <hr class="sidebar-divider">
+
+            <ul class="sidebar-menu">
+                <li class="menu-header">QUẢN LÝ HỆ THỐNG</li>
+                <li class="menu-item"><a href="/admin/user-detail" class="menu-link"><i class="fa-solid fa-users menu-icon"></i>Quản lý Người dùng</a></li>
+                <li class="menu-item"><a href="/admin/partners" class="menu-link"><i class="fa-solid fa-store menu-icon"></i>Quản lý Đối tác / Gian hàng</a></li>
+                <li class="menu-item"><a href="/admin/products" class="menu-link"><i class="fa-solid fa-box-open menu-icon"></i>Quản lý Sản phẩm / Dịch vụ</a></li>
+                <li class="menu-item"><a href="admin-orders.html" class="menu-link"><i class="fa-solid fa-calendar-check menu-icon"></i>Quản lý Đơn hàng & Lịch</a></li>
+                <li class="menu-item"><a href="admin-disputes.html" class="menu-link"><i class="fa-solid fa-headset menu-icon"></i>Khiếu nại & Hỗ trợ</a></li>
+                
+                <li class="menu-header">THỐNG KÊ & BÁO CÁO</li>
+                <li class="menu-item"><a href="#" class="menu-link"><i class="fa-solid fa-chart-line menu-icon"></i>Doanh thu & Hoa hồng</a></li>
+                <li class="menu-item"><a href="admin-payouts.html" class="menu-link"><i class="fa-solid fa-wallet menu-icon"></i>Thanh toán & Rút tiền</a></li>
+                
+                <li class="menu-header">CÀI ĐẶT & ĐIỀU HƯỚNG</li>
+                <li class="menu-item"><a href="admin-setting.html" class="menu-link active"><i class="fa-solid fa-gear menu-icon"></i>Cài đặt Hệ thống</a></li>
+            </ul>
+
+            <hr class="sidebar-divider">
+            <a href="/" class="home-link"><i class="fa-solid fa-house me-2"></i>Về trang chủ sàn</a>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-grow-1 p-4 main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1">Cấu Hình & Cài Đặt Hệ Thống (System Settings)</h4>
+                    <p class="text-muted small mb-0">Quản lý tham số phí sàn, quy định đặt cọc B2B/B2C, cổng thanh toán và VAT</p>
+                </div>
+                <button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="saveSettings()"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu Tất Cả Cấu Hình</button>
+            </div>
+
+            <!-- Tab Buttons -->
+            <ul class="nav nav-tabs border-0 mb-4" id="settingTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active me-2 border-0 bg-white shadow-sm" id="commission-tab" data-bs-toggle="tab" data-bs-target="#commission" type="button"><i class="fa-solid fa-percent me-2 text-primary"></i>Phí Sàn & Hoa Hồng</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link me-2 border-0 bg-white shadow-sm" id="b2b-tab" data-bs-toggle="tab" data-bs-target="#b2b" type="button"><i class="fa-solid fa-briefcase me-2 text-info"></i>Chính Sách B2B & VAT</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link me-2 border-0 bg-white shadow-sm" id="booking-tab" data-bs-toggle="tab" data-bs-target="#booking" type="button"><i class="fa-solid fa-hand-holding-dollar me-2 text-warning"></i>Cọc & Giữ Tiền</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link me-2 border-0 bg-white shadow-sm" id="gateway-tab" data-bs-toggle="tab" data-bs-target="#gateway" type="button"><i class="fa-solid fa-credit-card me-2 text-success"></i>Cổng Thanh Toán</button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="settingTabsContent">
+                
+                <div class="card border-0 shadow-sm rounded-3 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="fw-bold mb-1">Cấu Hình Tỷ Lệ Phí Sàn Theo Danh Mục Dịch Vụ</h5>
+            <p class="text-muted small mb-0">Tỷ lệ % hoa hồng sàn thu trên mỗi đơn hàng thành công</p>
+        </div>
+        <button class="btn btn-outline-primary btn-sm"><i class="fa-solid fa-plus me-1"></i>Thêm Danh Mục</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle border">
+            <thead class="table-light">
+                <tr>
+                    <th>Tên Danh Mục Dịch Vụ</th>
+                    <th style="width: 200px;">Phí Sàn B2C (%)</th>
+                    <th style="width: 200px;">Phí Sàn B2B (%)</th>
+                    <th>Trạng Thái</th>
+                    <th class="text-center" style="width: 100px;">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-semibold">Trang trí tiệc cưới Luxury</td>
+                    <td>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control" value="10">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control" value="8">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </td>
+                    <td><span class="badge bg-success-subtle text-success border border-success px-2 py-1">Áp dụng</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-link text-primary p-0"><i class="fa-solid fa-floppy-disk fs-6"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fw-semibold">Catering & Tiệc Buffet</td>
+                    <td>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control" value="12">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control" value="10">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </td>
+                    <td><span class="badge bg-success-subtle text-success border border-success px-2 py-1">Áp dụng</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-link text-primary p-0"><i class="fa-solid fa-floppy-disk fs-6"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+        <button class="btn btn-primary px-4"><i class="fa-solid fa-save me-1"></i>Lưu Thay Đổi Phí Sàn</button>
+    </div>
+</div>
+                <!-- TAB 2: CHÍNH SÁCH B2B & VAT -->
+                <div class="tab-pane fade" id="b2b" role="tabpanel">
+                    <div class="card card-custom border-0 shadow-sm p-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-building me-2"></i>Cấu Hình Hoa Hồng Hợp Tác Doanh Nghiệp (B2B Vendor - Vendor)</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-semibold">Chiết khấu sàn thu giao dịch B2B (%):</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" value="5">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <span class="fs-12 text-muted">Ưu đãi hoa hồng thấp hơn B2C để khuyến khích Vendor hợp tác liên kết.</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-semibold">Thuế GTGT / VAT mặc định (%):</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" value="10">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <span class="fs-12 text-muted">Áp dụng cho các hợp đồng yêu cầu xuất hóa đơn VAT B2B.</span>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Thông Tin Hóa Đơn Doanh Nghiệp Của Sàn (B2B Billing)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-semibold">Tên Công Ty / Đơn Vị Vận Hành Sàn:</label>
+                                <input type="text" class="form-control" value="CÔNG TY TNHH CÔNG NGHỆ & SỰ KIỆN EVENTDECOR B2B2C">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-semibold">Mã Số Thuế (MST):</label>
+                                <input type="text" class="form-control" value="0312345678">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: CỌC & GIỮ TIỀN -->
+                <div class="tab-pane fade" id="booking" role="tabpanel">
+                    <div class="card card-custom border-0 shadow-sm p-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-shield-cat me-2"></i>Quy Định Đặt Cọc & Thời Gian Giữ Tiền Đối Soát</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-semibold">% Tiền cọc tối thiểu khách/Vendor phải trả:</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" value="30">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-semibold">Thời gian tạm giữ cọc sau tiệc (Chờ đối soát):</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" value="3">
+                                    <span class="input-group-text">Ngày</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: CỔNG THANH TOÁN -->
+                <div class="tab-pane fade" id="gateway" role="tabpanel">
+                    <div class="card card-custom border-0 shadow-sm p-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-toggle-on me-2"></i>Bật/Tắt Cổng Thanh Toán Hỗ Trợ</h6>
+                        <div class="d-flex justify-content-between align-items-center p-3 border rounded mb-2 bg-white">
+                            <div>
+                                <span class="fw-bold text-dark">Thanh toán VietQR (Tự động đối soát MBBank/Vietcombank)</span>
+                                <span class="fs-12 text-muted d-block">Tạo mã QR chuyển khoản tự động kèm mã đơn tiệc</span>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" checked>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-3 border rounded bg-white">
+                            <div>
+                                <span class="fw-bold text-dark">Cổng VNPay Sandbox</span>
+                                <span class="fs-12 text-muted d-block">Tích hợp thanh toán qua Thẻ Quốc tế / ATM / QR Pay</span>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" checked>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function saveSettings() {
+            alert("Đã lưu thành công toàn bộ cấu hình hệ thống B2B2C!");
+        }
+    </script>
+</body>
+</html>
