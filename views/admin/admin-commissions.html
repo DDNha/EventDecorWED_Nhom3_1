@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống Kê Doanh Thu & Hoa Hồng - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: system-ui, -apple-system, sans-serif; }
+        .sidebar { width: 260px; min-height: 100vh; background: #1e293b; color: #fff; }
+        .sidebar .nav-link { color: #94a3b8; padding: 10px 20px; font-size: 14px; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background: #0f172a; border-left: 4px solid #0d6efd; }
+        .main-content { flex: 1; padding: 25px; }
+        .card-stat { border: none; border-radius: 12px; transition: transform 0.2s; }
+        .card-stat:hover { transform: translateY(-3px); }
+        .fs-12 { font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="d-flex">
+    <div class="admin-sidebar d-flex flex-column p-3 text-white" style="width: 260px; min-height: 100vh; background-color: #1e2329;">
+    
+    <!-- BRAND / LOGO -->
+    <div class="mb-3 px-2">
+        <h5 class="fw-bold text-warning mb-0 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-shield-halved"></i> ADMIN PANEL
+        </h5>
+        <div class="text-muted extra-small ms-4" style="font-size: 0.8rem;">
+            {{ admin.username if admin else 'seed_admin' }}
+        </div>
+    </div>
+
+    <hr class="border-secondary my-2">
+
+    <!-- MENU NAVIGATION -->
+    <div class="nav flex-column nav-pills gap-1">
+        
+        <!-- NHÓM 1: QUẢN LÝ HỆ THỐNG -->
+        <small class="text-uppercase text-muted fw-bold px-2 mt-2 mb-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">QUẢN LÝ HỆ THỐNG</small>
+        
+        <a href="/admin/users" class="nav-link text-white-50 px-2 py-2 d-flex align-items-center gap-2 rounded-2 {% if active_page == 'users' %}active bg-primary text-white fw-medium{% endif %}">
+            <i class="fa-solid fa-user-group me-1" style="width: 20px;"></i> Quản lý Người dùng
+        </a>
+
+        <a href="/admin/vendors" class="nav-link text-white-50 px-2 py-2 d-flex align-items-center gap-2 rounded-2 {% if active_page == 'vendors' %}active bg-primary text-white fw-medium{% endif %}">
+            <i class="fa-solid fa-store me-1" style="width: 20px;"></i> Quản lý Đối tác / Gian hàng
+        </a>
+
+        <a href="/admin/products" class="nav-link text-white-50 px-2 py-2 d-flex align-items-center gap-2 rounded-2 {% if active_page == 'products' %}active bg-primary text-white fw-medium{% endif %}">
+            <i class="fa-solid fa-boxes-stacked me-1" style="width: 20px;"></i> Quản lý Sản phẩm / Dịch vụ
+        </a>
+
+        <a href="/admin/orders" class="nav-link text-white-50 px-2 py-2 d-flex align-items-center gap-2 rounded-2 {% if active_page == 'orders' %}active bg-primary text-white fw-medium{% endif %}">
+            <i class="fa-solid fa-clipboard-list me-1" style="width: 20px;"></i> Quản lý Đơn hàng & Lịch
+        </a>
+
+        <a href="/admin/disputes" class="nav-link text-white-50 px-2 py-2 d-flex align-items-center gap-2 rounded-2 {% if active_page == 'disputes' %}active bg-primary text-white fw-medium{% endif %}">
+            <i class="fa-solid fa-headset me-1" style="width: 20px;"></i> Khiếu nại & Hỗ trợ
+        </a>
+
+        <!-- NHÓM 2: THỐNG KÊ & BÁO CÁO -->
+        <small class="text-uppercase text-muted fw-bold px-2 mt-3 mb-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">THỐNG KÊ & BÁO CÁO</small>
+
+        <a href="/admin/revenue" class="nav-link text-white-50 px-2 py-2 d-flex align-items-center gap-2 rounded-2 {% if active_page == 'revenue' %}active bg-primary text-white fw-medium{% endif %}">
+            <i class="fa-solid fa-chart-line me-1" style="width: 20px;"></i> Doanh thu & Hoa hồng
+        </a>
+
+        <a href="/admin/payouts" class="nav-link text-white-50 px-2 py-2 d-flex align-items-center gap-2 rounded-2 {% if active_page == 'payouts' %}active bg-primary text-white fw-medium{% endif %}">
+            <i class="fa-solid fa-wallet me-1" style="width: 20px;"></i> Thanh toán & Rút tiền
+        </a>
+
+        <!-- NHÓM 3: CÀI ĐẶT & ĐIỀU HƯỚNG -->
+        <small class="text-uppercase text-muted fw-bold px-2 mt-3 mb-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">CÀI ĐẶT & ĐIỀU HƯỚNG</small>
+
+        <a href="/admin/settings" class="nav-link text-white-50 px-2 py-2 d-flex align-items-center gap-2 rounded-2 {% if active_page == 'settings' %}active bg-primary text-white fw-medium{% endif %}">
+            <i class="fa-solid fa-gear me-1" style="width: 20px;"></i> Cài đặt Hệ thống
+        </a>
+    </div>
+
+    <!-- NÚT VỀ TRANG CHỦ SÀN Ở ĐÁY -->
+    <div class="mt-auto pt-3 border-top border-secondary">
+        <a href="/" class="nav-link text-warning px-2 py-2 d-flex align-items-center gap-2 fw-medium">
+            <i class="fa-solid fa-house me-1"></i> Về trang chủ sàn
+        </a>
+    </div>
+</div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header Bar -->
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-3 shadow-sm">
+            <h4 class="fw-bold mb-0 text-dark">Thống Kê Doanh Thu & Hoa Hồng Sàn</h4>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-light text-dark border px-3 py-2"><i class="fa-solid fa-user me-1"></i>{{ adminUser.username }}</span>
+                <a href="/logout" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</a>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <form class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <label class="form-label fs-12 fw-bold text-muted">KHOẢNG THỜI GIAN</label>
+                        <select class="form-select">
+                            <option selected>Tháng này (Tháng 11/2026)</option>
+                            <option>Tháng trước</option>
+                            <option>Quý này</option>
+                            <option>Cả năm 2026</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fs-12 fw-bold text-muted">LOC THEO GIAN HÀNG</label>
+                        <select class="form-select">
+                            <option selected>-- Tất cả Gian hàng --</option>
+                            {% for vendor in vendorsData %}
+                            <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end gap-2" style="height: 70px;">
+                        <button type="button" class="btn btn-primary w-100"><i class="fa-solid fa-filter me-1"></i>Lọc dữ liệu</button>
+                        <button type="button" class="btn btn-outline-success"><i class="fa-solid fa-file-excel"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card card-stat bg-primary text-white p-3 shadow-sm">
+                    <div class="fs-12 text-white-50 text-uppercase fw-bold">Tổng doanh số sàn (GMV)</div>
+                    <div class="fs-3 fw-bold my-1">{{ stats.totalGMV | currency }} đ</div>
+                    <div class="fs-12"><i class="fa-solid fa-arrow-up me-1"></i>+12.5% so với tháng trước</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-stat bg-success text-white p-3 shadow-sm">
+                    <div class="fs-12 text-white-50 text-uppercase fw-bold">Hoa hồng thực thu (10%)</div>
+                    <div class="fs-3 fw-bold my-1">{{ stats.totalCommission | currency }} đ</div>
+                    <div class="fs-12"><i class="fa-solid fa-wallet me-1"></i>Lợi nhuận gộp Sàn</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-stat bg-warning text-dark p-3 shadow-sm">
+                    <div class="fs-12 text-dark-50 text-uppercase fw-bold">Trả cho đối tác (90%)</div>
+                    <div class="fs-3 fw-bold my-1">{{ stats.vendorPayout | currency }} đ</div>
+                    <div class="fs-12"><i class="fa-solid fa-hand-holding-dollar me-1"></i>Đã đối soát 80%</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-stat bg-info text-white p-3 shadow-sm">
+                    <div class="fs-12 text-white-50 text-uppercase fw-bold">Tổng đơn hoàn thành</div>
+                    <div class="fs-3 fw-bold my-1">{{ stats.totalOrders }} đơn</div>
+                    <div class="fs-12"><i class="fa-solid fa-circle-check me-1"></i>Tỷ lệ thành công 96%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ & Bảng phân chia hoa hồng -->
+        <div class="row g-3 mb-4">
+            <!-- Biểu đồ -->
+            <div class="col-md-7">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white fw-bold py-3">
+                        <i class="fa-solid fa-chart-area text-primary me-2"></i>Biểu Đồ Tăng Trưởng Doanh Thu
+                    </div>
+                    <div class="card-body">
+                        <canvas id="revenueChart" style="max-height: 280px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng top đóng góp hoa hồng -->
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white fw-bold py-3">
+                        <i class="fa-solid fa-trophy text-warning me-2"></i>Top Gian Hàng Đóng Góp Hoa Hồng
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for vendor in vendorsData.slice(0, 5) %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="{{ vendor.image or 'https://via.placeholder.com/40' }}" class="rounded-circle border" style="width: 36px; height: 36px; object-fit: cover;">
+                                    <div>
+                                        <div class="fw-bold text-dark fs-14">{{ vendor.name }}</div>
+                                        <div class="text-muted fs-12">Phí sàn: 10%</div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-light text-success border fw-bold">2,500,000 đ</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Khởi tạo Biểu đồ Chart.js
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
+            datasets: [{
+                label: 'Tổng Doanh Số GMV (VNĐ)',
+                data: [30000000, 45000000, 35000000, 40000000],
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                fill: true,
+                tension: 0.3
+            }, {
+                label: 'Hoa Hồng Thu Về (VNĐ)',
+                data: [3000000, 4500000, 3500000, 4000000],
+                borderColor: '#198754',
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                borderDash: [5, 5],
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+</script>
+
+</body>
+</html>
