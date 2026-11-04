@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Quản Lý Đơn Hàng & Lịch Thi Công</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- EMBEDDED CSS -->
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Admin */
+        .admin-sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background-color: #1e2229;
+            padding: 20px 15px;
+            color: #abb2bf;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .brand-icon {
+            color: #ffc107;
+            font-size: 20px;
+        }
+        .brand-title {
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-user {
+            font-size: 13px;
+            color: #ffffff;
+            font-weight: 600;
+            margin-left: 28px;
+            margin-top: -2px;
+        }
+
+        .sidebar-divider {
+            border-color: rgba(255, 255, 255, 0.1);
+            margin: 15px 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .menu-header {
+            font-size: 11px;
+            font-weight: 700;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            padding-left: 10px;
+        }
+
+        .menu-item {
+            margin-bottom: 4px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            color: #c2c7d0;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .menu-icon {
+            width: 20px;
+            margin-right: 10px;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .menu-link:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+
+        .menu-link.active {
+            background-color: #0d6efd;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(13, 110, 253, 0.4);
+        }
+
+        .home-link {
+            color: #ffc107;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            border-radius: 6px;
+        }
+
+        .main-content {
+            background-color: #f8f9fa;
+        }
+
+        .card-custom {
+            border-radius: 12px;
+        }
+
+        .fs-12 {
+            font-size: 12px;
+        }
+
+        .fs-14 {
+            font-size: 14px;
+        }
+
+        .font-monospace {
+            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="d-flex">
+        <!-- SIDEBAR ADMIN BANNER CHUẨN -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-shield-halved brand-icon"></i>
+                <span class="brand-title">ADMIN PANEL</span>
+            </div>
+            <div class="sidebar-user">seed_admin</div>
+            <hr class="sidebar-divider">
+
+            <ul class="sidebar-menu">
+                <li class="menu-header">QUẢN LÝ HỆ THỐNG</li>
+                <li class="menu-item">
+                    <a href="admin-users.html" class="menu-link">
+                        <i class="fa-solid fa-users menu-icon"></i>Quản lý Người dùng
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="admin-vendors.html" class="menu-link">
+                        <i class="fa-solid fa-store menu-icon"></i>Quản lý Đối tác / Gian hàng
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="admin-products.html" class="menu-link">
+                        <i class="fa-solid fa-box-open menu-icon"></i>Quản lý Sản phẩm / Dịch vụ
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="admin-orders.html" class="menu-link active">
+                        <i class="fa-solid fa-calendar-check menu-icon"></i>Quản lý Đơn hàng & Lịch
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <i class="fa-solid fa-headset menu-icon"></i>Khiếu nại & Hỗ trợ
+                    </a>
+                </li>
+
+                <li class="menu-header">THỐNG KÊ & BÁO CÁO</li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <i class="fa-solid fa-chart-line menu-icon"></i>Doanh thu & Hoa hồng
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <i class="fa-solid fa-wallet menu-icon"></i>Thanh toán & Rút tiền
+                    </a>
+                </li>
+
+                <li class="menu-header">CÀI ĐẶT & ĐIỀU HƯỚNG</li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link">
+                        <i class="fa-solid fa-gear menu-icon"></i>Cài đặt Hệ thống
+                    </a>
+                </li>
+            </ul>
+
+            <hr class="sidebar-divider">
+            <a href="/" class="home-link">
+                <i class="fa-solid fa-house me-2"></i>Về trang chủ sàn
+            </a>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-grow-1 p-4 main-content">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1">Quản Lý Đơn Hàng & Lịch Thi Công (Order Management)</h4>
+                    <p class="text-muted small mb-0">Giám sát giao dịch, hoa hồng sàn B2B2C và xử lý khiếu nại hủy tiệc</p>
+                </div>
+                <button class="btn btn-outline-danger btn-sm rounded-pill"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</button>
+            </div>
+
+            <!-- KPI Summary Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-primary">
+                        <span class="text-muted fs-12">Tổng giao dịch sàn</span>
+                        <h3 class="fw-bold text-dark my-1" id="kpiTotalOrders">0</h3>
+                        <span class="text-muted fs-12">Đã phát sinh trên hệ thống</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-warning">
+                        <span class="text-muted fs-12">Sự kiện 7 ngày tới</span>
+                        <h3 class="fw-bold text-warning my-1" id="kpiUpcoming">0 Tiệc</h3>
+                        <span class="text-warning-emphasis fs-12"><i class="fa-solid fa-truck-fast me-1"></i>Cần theo dõi thi công</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-success">
+                        <span class="text-muted fs-12">Tổng hoa hồng sàn thu</span>
+                        <h3 class="fw-bold text-success my-1" id="kpiCommission">0 đ</h3>
+                        <span class="text-muted fs-12">Chiết khấu từ Vendor</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-danger">
+                        <span class="text-muted fs-12">Yêu cầu hủy / Tranh chấp</span>
+                        <h3 class="fw-bold text-danger my-1" id="kpiDisputes">0 Đơn</h3>
+                        <span class="text-danger fs-12"><i class="fa-solid fa-triangle-exclamation me-1"></i>Cần Admin xử lý</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="card card-custom border-0 shadow-sm p-3 mb-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Tìm theo Mã đơn (#ORD), tên khách hàng, tên gian hàng...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="typeFilter" class="form-select">
+                            <option value="">-- Tất cả phân loại --</option>
+                            <option value="b2b">Khách B2B (Xuất hóa đơn VAT)</option>
+                            <option value="b2c">Khách lẻ B2C</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="statusFilter" class="form-select">
+                            <option value="">-- Tất cả trạng thái đơn --</option>
+                            <option value="pending">Chờ xác nhận</option>
+                            <option value="confirmed">Đã cọc (Đang chuẩn bị)</option>
+                            <option value="completed">Đã hoàn thành tiệc</option>
+                            <option value="disputed">Khiếu nại / Yêu cầu hủy</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100" id="btnFilter"><i class="fa-solid fa-filter me-1"></i>Lọc dữ liệu</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Orders List -->
+            <div class="card card-custom border-0 shadow-sm p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Mã Đơn & Ngày Tạo</th>
+                                <th>Khách Hàng</th>
+                                <th>Gian Hàng (Vendor)</th>
+                                <th>Thời Gian & Địa Điểm Tiệc</th>
+                                <th class="text-end">Tài Chính & Hoa Hồng Sàn</th>
+                                <th class="text-center">Trạng Thái</th>
+                                <th class="text-center" style="width: 180px;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                            <!-- Dynamic Rows Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL POP-UP CHI TIẾT ĐƠN HÀNG & ĐỐI SOÁT HOÀN TIỀN -->
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fs-6 fw-bold"><i class="fa-solid fa-file-invoice-dollar text-warning me-2"></i>Thẩm Định Chi Tiết Đơn Tiệc & Tài Chính</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    
+                    <!-- Hàng 1: Khách hàng & Gian hàng -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-light">
+                                <h6 class="fw-bold text-dark fs-14 mb-2"><i class="fa-solid fa-user text-primary me-2"></i>Thông tin Khách hàng đặt tiệc</h6>
+                                <div class="small">
+                                    <div><strong>Họ tên:</strong> <span id="modalCustomerName">--</span></div>
+                                    <div><strong>Điện thoại:</strong> <span id="modalCustomerPhone">--</span></div>
+                                    <div id="modalB2BInfo" class="mt-2 text-primary fw-semibold d-none">
+                                        <i class="fa-solid fa-building me-1"></i>Đơn hàng B2B (Yêu cầu xuất VAT)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-light">
+                                <h6 class="fw-bold text-dark fs-14 mb-2"><i class="fa-solid fa-store text-success me-2"></i>Gian hàng tiếp nhận thi công</h6>
+                                <div class="small">
+                                    <div><strong>Tên thương hiệu:</strong> <span id="modalVendorName">--</span></div>
+                                    <div><strong>Gói dịch vụ chọn:</strong> <span id="modalServiceName">--</span></div>
+                                    <div><strong>Phí sàn áp dụng:</strong> <span id="modalCommissionRate" class="badge bg-warning text-dark">10%</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hàng 2: Chi tiết sự kiện & Địa điểm -->
+                    <div class="border rounded p-3 mb-3">
+                        <h6 class="fw-bold text-dark fs-14 mb-2"><i class="fa-solid fa-calendar-day text-info me-2"></i>Thời gian & Địa điểm tổ chức</h6>
+                        <div class="row g-2 small">
+                            <div class="col-md-6">
+                                <div><strong>Ngày & Giờ tổ chức:</strong> <span id="modalEventDate" class="text-primary fw-bold">--</span></div>
+                                <div><strong>Quy mô tiệc:</strong> <span id="modalGuestCount">--</span></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div><strong>Địa điểm thi công:</strong> <span id="modalEventAddress">--</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hàng 3: Bảng phân tích dòng tiền sàn -->
+                    <div class="border rounded p-3 bg-light">
+                        <h6 class="fw-bold text-dark fs-14 mb-2"><i class="fa-solid fa-calculator text-success me-2"></i>Bảng Phân Tích Dòng Tiền & Payout</h6>
+                        <table class="table table-sm table-bordered bg-white small mb-0">
+                            <tbody>
+                                <tr>
+                                    <td>Tổng giá trị tiệc (Khách trả):</td>
+                                    <td class="text-end fw-bold" id="modalTotalAmount">0 đ</td>
+                                </tr>
+                                <tr>
+                                    <td>Số tiền đã đặt cọc qua Sàn:</td>
+                                    <td class="text-end text-primary fw-semibold" id="modalDepositAmount">0 đ</td>
+                                </tr>
+                                <tr>
+                                    <td>Phí hoa hồng Sàn thu về (Admin Revenue):</td>
+                                    <td class="text-end text-danger fw-bold" id="modalCommissionFee">0 đ</td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td class="fw-bold">Số tiền Payout thực nhận của Vendor:</td>
+                                    <td class="text-end fw-bold text-success fs-6" id="modalNetPayout">0 đ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Khối Xử lý tranh chấp hoàn tiền -->
+                    <div class="mt-3 p-3 bg-danger-subtle border border-danger-subtle rounded d-none" id="disputeBox">
+                        <label class="form-label small fw-bold text-danger mb-1"><i class="fa-solid fa-gavel me-1"></i>Quyết định của Admin về khiếu nại / Hủy đơn:</label>
+                        <select class="form-select form-select-sm mb-2" id="disputeDecisionSelect">
+                            <option value="refund_customer">Hoàn tiền cọc 100% cho Khách hàng (Lỗi thuộc về Vendor)</option>
+                            <option value="pay_vendor">Phạt mất cọc Khách hàng, chuyển tiền cho Vendor (Khách tự ý hủy)</option>
+                            <option value="split_50">Chia đôi tiền cọc bồi thường 50/50</option>
+                        </select>
+                        <textarea class="form-control form-control-sm" id="disputeNote" rows="2" placeholder="Ghi chú căn cứ đưa ra quyết định xử lý tranh chấp..."></textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary rounded-pill btn-sm" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-outline-danger rounded-pill btn-sm px-3" id="btnShowDispute" onclick="toggleDisputeBox()"><i class="fa-solid fa-gavel me-1"></i>Xử Lý Tranh Chấp / Hủy Đơn</button>
+                    <button type="button" class="btn btn-danger rounded-pill btn-sm px-3 d-none" id="btnConfirmDispute" onclick="confirmDisputeDecision()"><i class="fa-solid fa-paper-plane me-1"></i>Xác Nhận Quyết Định Admin</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- EMBEDDED JAVASCRIPT -->
+    <script>
+        // Dữ liệu mẫu Danh sách Đơn Đặt Tiệc toàn sàn B2B2C
+        let ordersData = [
+            {
+                id: "ORD-8821",
+                createdAt: "04/11/2026 09:30",
+                customerName: "Nguyễn Văn A",
+                customerPhone: "0901234567",
+                isB2B: false,
+                vendorName: "seed_partner_party",
+                serviceName: "Trang trí tiệc cưới Luxury (Tone Gold)",
+                eventDate: "15/12/2026 (18:00)",
+                eventAddress: "Gem Center, Q.1, TP.HCM",
+                guestCount: "350 khách (35 bàn)",
+                totalAmount: 25000000,
+                depositAmount: 12500000,
+                commissionRate: 10,
+                status: "pending" // pending | confirmed | completed | disputed
+            },
+            {
+                id: "ORD-8815",
+                createdAt: "02/11/2026 14:15",
+                customerName: "Công ty TNHH VNTech",
+                customerPhone: "0988777666",
+                isB2B: true,
+                taxCode: "0315667788",
+                vendorName: "seed_partner_media",
+                serviceName: "Gói Âm Thanh Ánh Sáng Year End Party",
+                eventDate: "10/11/2026 (17:00)",
+                eventAddress: "Adora Center, Q. Tân Bình, TP.HCM",
+                guestCount: "500 khách",
+                totalAmount: 30000000,
+                depositAmount: 15000000,
+                commissionRate: 8,
+                status: "confirmed"
+            },
+            {
+                id: "ORD-8790",
+                createdAt: "28/10/2026 11:00",
+                customerName: "Trần Thị B",
+                customerPhone: "0912345678",
+                isB2B: false,
+                vendorName: "seed_partner_party",
+                serviceName: "Gói Catering Tiệc Buffet Âu 10 Món",
+                eventDate: "01/11/2026 (Đã xong)",
+                eventAddress: "124 NTMK, Q.3, TP.HCM",
+                guestCount: "50 khách",
+                totalAmount: 18000000,
+                depositAmount: 18000000,
+                commissionRate: 10,
+                status: "completed"
+            },
+            {
+                id: "ORD-8710",
+                createdAt: "20/10/2026 16:45",
+                customerName: "Lê Văn C",
+                customerPhone: "0977123456",
+                isB2B: false,
+                vendorName: "seed_partner_media",
+                serviceName: "Gói Quay Phim & Flycam Sự Kiện",
+                eventDate: "05/11/2026",
+                eventAddress: "Khách sạn Rex, Q.1, TP.HCM",
+                guestCount: "100 khách",
+                totalAmount: 15000000,
+                depositAmount: 7500000,
+                commissionRate: 10,
+                status: "disputed"
+            }
+        ];
+
+        let selectedOrderId = null;
+        let orderModalInstance = null;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            orderModalInstance = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+            
+            updateKPIs();
+            renderOrderTable(ordersData);
+
+            document.getElementById("btnFilter").addEventListener("click", applyFilters);
+        });
+
+        // Cập nhật thẻ KPI Thống kê
+        function updateKPIs() {
+            document.getElementById("kpiTotalOrders").innerText = ordersData.length;
+            document.getElementById("kpiUpcoming").innerText = ordersData.filter(o => o.status === 'confirmed').length + " Tiệc";
+            
+            // Tính tổng hoa hồng sàn Admin thu được
+            let totalCommission = ordersData.reduce((sum, o) => {
+                if (o.status === 'completed' || o.status === 'confirmed') {
+                    return sum + (o.totalAmount * (o.commissionRate / 100));
+                }
+                return sum;
+            }, 0);
+            
+            document.getElementById("kpiCommission").innerText = totalCommission.toLocaleString('vi-VN') + " đ";
+            document.getElementById("kpiDisputes").innerText = ordersData.filter(o => o.status === 'disputed').length + " Đơn";
+        }
+
+        // Render Bảng Đơn Hàng
+        function renderOrderTable(data) {
+            const tbody = document.getElementById("orderTableBody");
+            tbody.innerHTML = "";
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Không tìm thấy đơn hàng nào phù hợp.</td></tr>`;
+                return;
+            }
+
+            data.forEach(o => {
+                let statusBadge = '';
+                if (o.status === 'completed') {
+                    statusBadge = `<span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Hoàn thành</span>`;
+                } else if (o.status === 'confirmed') {
+                    statusBadge = `<span class="badge bg-info text-dark"><i class="fa-solid fa-truck-fast me-1"></i>Đã cọc (Sắp thi công)</span>`;
+                } else if (o.status === 'pending') {
+                    statusBadge = `<span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half me-1"></i>Chờ xác nhận</span>`;
+                } else {
+                    statusBadge = `<span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Tranh chấp / Hủy</span>`;
+                }
+
+                let typeBadge = o.isB2B ? 
+                    `<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill"><i class="fa-solid fa-building me-1"></i>B2B (VAT)</span>` : 
+                    `<span class="badge bg-light text-secondary border rounded-pill">B2C Cá nhân</span>`;
+
+                let commissionFee = o.totalAmount * (o.commissionRate / 100);
+                let netPayout = o.totalAmount - commissionFee;
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>
+                        <a href="#" class="fw-bold font-monospace text-decoration-none">#${o.id}</a>
+                        <div class="text-muted fs-12">${o.createdAt}</div>
+                        <div class="mt-1">${typeBadge}</div>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark">${o.customerName}</div>
+                        <div class="text-muted fs-12">${o.customerPhone}</div>
+                    </td>
+                    <td>
+                        <div class="fw-semibold text-primary"><i class="fa-solid fa-store me-1"></i>${o.vendorName}</div>
+                        <div class="text-muted fs-12 text-truncate" style="max-width: 150px;" title="${o.serviceName}">${o.serviceName}</div>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark"><i class="fa-solid fa-calendar-day me-1 text-info"></i>${o.eventDate}</div>
+                        <div class="text-muted fs-12 text-truncate" style="max-width: 180px;" title="${o.eventAddress}">${o.eventAddress}</div>
+                    </td>
+                    <td class="text-end">
+                        <div class="fw-bold text-dark">${o.totalAmount.toLocaleString('vi-VN')} đ</div>
+                        <div class="text-danger fs-12" title="Hoa hồng sàn thu (${o.commissionRate}%)">Phí sàn: -${commissionFee.toLocaleString('vi-VN')} đ</div>
+                        <div class="text-success fw-bold fs-12">Payout: ${netPayout.toLocaleString('vi-VN')} đ</div>
+                    </td>
+                    <td class="text-center">${statusBadge}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="openOrderDetail('${o.id}')">
+                            <i class="fa-solid fa-file-invoice me-1"></i>Chi tiết
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Mở Modal Chi tiết & Thẩm định Đơn tiệc
+        function openOrderDetail(orderId) {
+            selectedOrderId = orderId;
+            const o = ordersData.find(item => item.id === orderId);
+            if (!o) return;
+
+            // Reset Box Tranh chấp
+            document.getElementById("disputeBox").classList.add("d-none");
+            document.getElementById("btnConfirmDispute").classList.add("d-none");
+            document.getElementById("btnShowDispute").classList.remove("d-none");
+
+            document.getElementById("modalCustomerName").innerText = o.customerName;
+            document.getElementById("modalCustomerPhone").innerText = o.customerPhone;
+            
+            if (o.isB2B) {
+                document.getElementById("modalB2BInfo").classList.remove("d-none");
+            } else {
+                document.getElementById("modalB2BInfo").classList.add("d-none");
+            }
+
+            document.getElementById("modalVendorName").innerText = o.vendorName;
+            document.getElementById("modalServiceName").innerText = o.serviceName;
+            document.getElementById("modalCommissionRate").innerText = o.commissionRate + "%";
+
+            document.getElementById("modalEventDate").innerText = o.eventDate;
+            document.getElementById("modalGuestCount").innerText = o.guestCount;
+            document.getElementById("modalEventAddress").innerText = o.eventAddress;
+
+            let commissionFee = o.totalAmount * (o.commissionRate / 100);
+            let netPayout = o.totalAmount - commissionFee;
+
+            document.getElementById("modalTotalAmount").innerText = o.totalAmount.toLocaleString('vi-VN') + " đ";
+            document.getElementById("modalDepositAmount").innerText = o.depositAmount.toLocaleString('vi-VN') + " đ";
+            document.getElementById("modalCommissionFee").innerText = "-" + commissionFee.toLocaleString('vi-VN') + " đ";
+            document.getElementById("modalNetPayout").innerText = netPayout.toLocaleString('vi-VN') + " đ";
+
+            orderModalInstance.show();
+        }
+
+        // Xử lý Xóa/Tranh chấp đơn
+        function toggleDisputeBox() {
+            document.getElementById("disputeBox").classList.remove("d-none");
+            document.getElementById("btnConfirmDispute").classList.remove("d-none");
+            document.getElementById("btnShowDispute").classList.add("d-none");
+        }
+
+        function confirmDisputeDecision() {
+            const decision = document.getElementById("disputeDecisionSelect").value;
+            const note = document.getElementById("disputeNote").value.trim();
+
+            if (!note) {
+                alert("Vui lòng ghi chú lý do đưa ra quyết định Admin!");
+                return;
+            }
+
+            const o = ordersData.find(item => item.id === selectedOrderId);
+            if (o) {
+                o.status = 'disputed';
+                updateKPIs();
+                renderOrderTable(ordersData);
+                orderModalInstance.hide();
+                alert(`Đã áp dụng quyết định Admin cho đơn #${o.id}.\nGhi chú xử lý: "${note}"`);
+            }
+        }
+
+        // Bộ lọc dữ liệu
+        function applyFilters() {
+            const searchVal = document.getElementById("searchInput").value.toLowerCase().trim();
+            const typeVal = document.getElementById("typeFilter").value;
+            const statusVal = document.getElementById("statusFilter").value;
+
+            const filtered = ordersData.filter(o => {
+                const matchSearch = o.id.toLowerCase().includes(searchVal) || 
+                                    o.customerName.toLowerCase().includes(searchVal) || 
+                                    o.vendorName.toLowerCase().includes(searchVal);
+                
+                let matchType = true;
+                if (typeVal === 'b2b') matchType = o.isB2B === true;
+                if (typeVal === 'b2c') matchType = o.isB2B === false;
+
+                const matchStatus = statusVal === "" || o.status === statusVal;
+
+                return matchSearch && matchType && matchStatus;
+            });
+
+            renderOrderTable(filtered);
+        }
+    </script>
+</body>
+</html>
