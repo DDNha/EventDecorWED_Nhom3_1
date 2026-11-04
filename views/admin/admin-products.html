@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Quản Lý Sản Phẩm & Dịch Vụ</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- EMBEDDED CSS -->
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .sidebar-admin {
+            width: 260px;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            background-color: #f8f9fa;
+        }
+
+        .card-custom {
+            border-radius: 12px;
+        }
+
+        .fs-12 {
+            font-size: 12px;
+        }
+
+        .fs-14 {
+            font-size: 14px;
+        }
+
+        /* Modal Gallery Images */
+        .modal-gallery-img {
+            width: 120px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .font-monospace {
+            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="d-flex">
+        <!-- SIDEBAR ADMIN -->
+        <!-- SIDEBAR ADMIN CONTAINER -->
+<aside class="admin-sidebar">
+    <!-- HEADER BRAND & USER -->
+    <div class="sidebar-brand">
+        <i class="fa-solid fa-shield-halved brand-icon"></i>
+        <span class="brand-title">ADMIN PANEL</span>
+    </div>
+    <div class="sidebar-user">seed_admin</div>
+    <hr class="sidebar-divider">
+
+    <!-- NAVIGATION MENU -->
+    <ul class="sidebar-menu">
+        <!-- GROUP 1 -->
+        <li class="menu-header">QUẢN LÝ HỆ THỐNG</li>
+        <li class="menu-item">
+            <a href="admin-users.html" class="menu-link">
+                <i class="fa-solid fa-users menu-icon"></i>Quản lý Người dùng
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="admin-vendors.html" class="menu-link">
+                <i class="fa-solid fa-store menu-icon"></i>Quản lý Đối tác / Gian hàng
+            </a>
+        </li>
+        <li class="menu-item">
+            <!-- Nút Active trang Sản phẩm / Dịch vụ -->
+            <a href="admin-products.html" class="menu-link active">
+                <i class="fa-solid fa-box-open menu-icon"></i>Quản lý Sản phẩm / Dịch vụ
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="admin-orders.html" class="menu-link">
+                <i class="fa-solid fa-calendar-check menu-icon"></i>Quản lý Đơn hàng & Lịch
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="#" class="menu-link">
+                <i class="fa-solid fa-headset menu-icon"></i>Khiếu nại & Hỗ trợ
+            </a>
+        </li>
+
+        <!-- GROUP 2 -->
+        <li class="menu-header">THỐNG KÊ & BÁO CÁO</li>
+        <li class="menu-item">
+            <a href="#" class="menu-link">
+                <i class="fa-solid fa-chart-line menu-icon"></i>Doanh thu & Hoa hồng
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="#" class="menu-link">
+                <i class="fa-solid fa-wallet menu-icon"></i>Thanh toán & Rút tiền
+            </a>
+        </li>
+
+        <!-- GROUP 3 -->
+        <li class="menu-header">CÀI ĐẶT & ĐIỀU HƯỚNG</li>
+        <li class="menu-item">
+            <a href="#" class="menu-link">
+                <i class="fa-solid fa-gear menu-icon"></i>Cài đặt Hệ thống
+            </a>
+        </li>
+    </ul>
+
+    <!-- FOOTER NAV -->
+    <hr class="sidebar-divider">
+    <a href="/" class="home-link">
+        <i class="fa-solid fa-house me-2"></i>Về trang chủ sàn
+    </a>
+</aside>
+<style>
+    /* Tổng thể Sidebar */
+    .admin-sidebar {
+        width: 250px;
+        min-height: 100vh;
+        background-color: #1e2229; /* Màu nền đen xám tối */
+        padding: 20px 15px;
+        color: #abb2bf;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Brand Header */
+    .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .brand-icon {
+        color: #ffc107; /* Màu vàng biểu tượng khiên */
+        font-size: 20px;
+    }
+    .brand-title {
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: 0.5px;
+    }
+
+    /* User Subtitle */
+    .sidebar-user {
+        font-size: 13px;
+        color: #ffffff;
+        font-weight: 600;
+        margin-left: 28px;
+        margin-top: -2px;
+    }
+
+    /* Divider */
+    .sidebar-divider {
+        border-color: rgba(255, 255, 255, 0.1);
+        margin: 15px 0;
+    }
+
+    /* Menu & Group Header */
+    .sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex-grow: 1;
+    }
+
+    .menu-header {
+        font-size: 11px;
+        font-weight: 700;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-top: 15px;
+        margin-bottom: 8px;
+        padding-left: 10px;
+    }
+
+    .menu-item {
+        margin-bottom: 4px;
+    }
+
+    /* Link Menu Item */
+    .menu-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 12px;
+        color: #c2c7d0;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .menu-icon {
+        width: 20px;
+        margin-right: 10px;
+        font-size: 15px;
+        text-align: center;
+    }
+
+    .menu-link:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+    }
+
+    /* Trạng thái Active (Menu đang được mở) */
+    .menu-link.active {
+        background-color: #0d6efd; /* Màu xanh lam chuẩn Admin */
+        color: #ffffff;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(13, 110, 253, 0.4);
+    }
+
+    /* Link về trang chủ sàn */
+    .home-link {
+        color: #ffc107;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 14px;
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+        border-radius: 6px;
+        transition: background 0.2s;
+    }
+
+    .home-link:hover {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffca2c;
+    }
+</style>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-grow-1 p-4 main-content">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1">Quản Lý Sản Phẩm & Dịch Vụ (Catalog Moderation)</h4>
+                    <p class="text-muted small mb-0">Kiểm duyệt bài đăng, giá cả và chất lượng gói tiệc của các Gian hàng trên sàn</p>
+                </div>
+                <button class="btn btn-outline-danger btn-sm rounded-pill"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</button>
+            </div>
+
+            <!-- KPI Summary Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-primary">
+                        <span class="text-muted fs-12">Tổng gói dịch vụ</span>
+                        <h3 class="fw-bold text-dark my-1" id="kpiTotal">0</h3>
+                        <span class="text-muted fs-12">Đã lưu trên hệ thống</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-warning">
+                        <span class="text-muted fs-12">Chờ duyệt nội dung</span>
+                        <h3 class="fw-bold text-warning my-1" id="kpiPending">0</h3>
+                        <span class="text-warning-emphasis fs-12"><i class="fa-solid fa-clock me-1"></i>Cần kiểm duyệt ngay</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-success">
+                        <span class="text-muted fs-12">Đã duyệt (Đang bán)</span>
+                        <h3 class="fw-bold text-success my-1" id="kpiApproved">0</h3>
+                        <span class="text-muted fs-12">Hiển thị công khai B2C</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-danger">
+                        <span class="text-muted fs-12">Bị từ chối / Khóa</span>
+                        <h3 class="fw-bold text-danger my-1" id="kpiRejected">0</h3>
+                        <span class="text-muted fs-12">Vi phạm tiêu chuẩn sàn</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="card card-custom border-0 shadow-sm p-3 mb-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Tìm theo tên gói tiệc, mã dịch vụ, tên gian hàng...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="categoryFilter" class="form-select">
+                            <option value="">-- Tất cả danh mục --</option>
+                            <option value="Trang trí">Trang trí tiệc</option>
+                            <option value="Âm thanh">Âm thanh & Ánh sáng</option>
+                            <option value="Catering">Catering / Thực đơn tiệc</option>
+                            <option value="Nhân sự">MC & Nghệ sĩ</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="statusFilter" class="form-select">
+                            <option value="">-- Trạng thái duyệt --</option>
+                            <option value="pending">Chờ Admin duyệt</option>
+                            <option value="approved">Đã duyệt (Đang bán)</option>
+                            <option value="rejected">Bị từ chối</option>
+                            <option value="hidden">Tạm ẩn</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100" id="btnFilter"><i class="fa-solid fa-filter me-1"></i>Lọc dữ liệu</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Products -->
+            <div class="card card-custom border-0 shadow-sm p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Mã Gói</th>
+                                <th>Ảnh & Tên Gói Dịch Vụ</th>
+                                <th>Gian Hàng Sở Hữu</th>
+                                <th>Danh Mục</th>
+                                <th class="text-end">Giá Niêm Yết</th>
+                                <th class="text-center">Trạng Thái Sàn</th>
+                                <th class="text-center" style="width: 200px;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody">
+                            <!-- Injected by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL POP-UP THẨM ĐỊNH CHI TIẾT BÀI ĐĂNG GÓI TIỆC -->
+    <div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fs-6 fw-bold"><i class="fa-solid fa-box-open text-warning me-2"></i>Thẩm Định Chi Tiết Gói Dịch Vụ Tiệc</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <h5 class="fw-bold text-dark mb-1" id="modalProductName">--</h5>
+                            <div class="text-muted small">Gian hàng đăng: <strong class="text-primary" id="modalVendorName">--</strong></div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="fs-12 text-muted d-block">Giá niêm yết:</span>
+                            <span class="fs-4 fw-bold text-success" id="modalProductPrice">0 đ</span>
+                        </div>
+                    </div>
+
+                    <!-- Gallery Ảnh mẫu tiệc -->
+                    <h6 class="fw-bold text-dark fs-14 border-bottom pb-2 mb-2"><i class="fa-solid fa-images text-info me-2"></i>Hình ảnh bộ sưu tập thực tế</h6>
+                    <div class="d-flex gap-2 mb-3 overflow-x-auto pb-2" id="modalGallery">
+                        <!-- Dynamic Images -->
+                    </div>
+
+                    <!-- Nội dung mô tả & Quy định -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded border h-100">
+                                <h6 class="fw-bold small mb-2"><i class="fa-solid fa-align-left me-1"></i>Mô tả chi tiết gói dịch vụ:</h6>
+                                <p class="small text-muted mb-0" id="modalDescription" style="white-space: pre-line;">--</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded border h-100">
+                                <h6 class="fw-bold small mb-2"><i class="fa-solid fa-shield-halved me-1"></i>Chính sách đặt cọc & Hủy tiệc:</h6>
+                                <p class="small text-muted mb-0" id="modalPolicy">--</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Khối Nhập lý do từ chối -->
+                    <div class="p-3 bg-danger-subtle border border-danger-subtle rounded d-none" id="rejectBox">
+                        <label class="form-label small fw-bold text-danger mb-1"><i class="fa-solid fa-circle-exclamation me-1"></i>Nhập lý do từ chối đăng bài:</label>
+                        <textarea class="form-control form-control-sm" id="rejectReasonInput" rows="2" placeholder="Ví dụ: Giá đăng chưa chính xác, Ảnh watermark thương hiệu ngoài sàn, Mô tả có SĐT kéo khách ngoài..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary rounded-pill btn-sm" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-outline-danger rounded-pill btn-sm px-3" id="btnShowReject" onclick="toggleRejectBox()"><i class="fa-solid fa-xmark me-1"></i>Từ Chối Bài Đăng</button>
+                    <button type="button" class="btn btn-danger rounded-pill btn-sm px-3 d-none" id="btnConfirmReject" onclick="confirmRejectProduct()"><i class="fa-solid fa-paper-plane me-1"></i>Gửi Lý Do Từ Chối</button>
+                    <button type="button" class="btn btn-success rounded-pill btn-sm px-4" id="btnApproveProduct" onclick="approveProduct()"><i class="fa-solid fa-check me-1"></i>Phê Duyệt Cho Đăng Bán</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- EMBEDDED JAVASCRIPT -->
+    <script>
+        // Dữ liệu mẫu Gói Dịch Vụ
+        let productsData = [
+            {
+                id: "SVC-101",
+                name: "Gói trang trí tiệc cưới Luxury (Tone Gold & Flower)",
+                category: "Trang trí",
+                vendorName: "seed_partner_party",
+                vendorId: 6,
+                price: 25000000,
+                status: "approved", // approved | pending | rejected | hidden
+                thumbnail: "https://via.placeholder.com/150?text=Decor+Luxury",
+                gallery: [
+                    "https://via.placeholder.com/400x300?text=Decor+Gold+1",
+                    "https://via.placeholder.com/400x300?text=Decor+Gold+2"
+                ],
+                description: "- Khung rạp cưới hoa tươi cao cấp 50m2\n- Cổng chào welcome hoa lụa nhập khẩu\n- Bàn Gallery 3m kèm phụ kiện nến nghệ thuật\n- Phông sân khấu thiết kế theo tên Cô dâu & Chú rể",
+                cancellationPolicy: "Hủy trước 7 ngày hoàn 100% cọc. Hủy trong vòng 3 ngày mất cọc."
+            },
+            {
+                id: "SVC-102",
+                name: "Dàn Âm Thanh Ánh Sáng Event ngoài trời 5000W",
+                category: "Âm thanh",
+                vendorName: "seed_partner_media",
+                vendorId: 7,
+                price: 12000000,
+                status: "pending",
+                thumbnail: "https://via.placeholder.com/150?text=Am+Thanh+Event",
+                gallery: [
+                    "https://via.placeholder.com/400x300?text=Stage+Sound+1"
+                ],
+                description: "- 04 Loa Line Array RCF nhập khẩu Italia\n- 02 Sub đôi 5T\n- Ban Mixer Digital Midas M32R\n- 08 Đèn Beam 350W + Khung Truss nhôm 6m",
+                cancellationPolicy: "Đặt cọc trước 30%. Hủy tiệc báo trước 48h."
+            },
+            {
+                id: "SVC-103",
+                name: "Menu Buffet Âu 10 Món Tiệc Đứng",
+                category: "Catering",
+                vendorName: "seed_partner_party",
+                vendorId: 6,
+                price: 450000,
+                status: "rejected",
+                thumbnail: "https://via.placeholder.com/150?text=Buffet+Catering",
+                gallery: [],
+                description: "Menu tiệc Âu cao cấp phục vụ tối thiểu từ 30 khách trở lên...",
+                cancellationPolicy: "Theo thỏa thuận hợp đồng tiệc."
+            }
+        ];
+
+        let selectedProductId = null;
+        let productModalInstance = null;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            productModalInstance = new bootstrap.Modal(document.getElementById('productDetailModal'));
+            
+            updateKPIs();
+            renderProductTable(productsData);
+
+            document.getElementById("btnFilter").addEventListener("click", applyFilters);
+        });
+
+        // Cập nhật thẻ KPI
+        function updateKPIs() {
+            document.getElementById("kpiTotal").innerText = productsData.length;
+            document.getElementById("kpiPending").innerText = productsData.filter(p => p.status === 'pending').length;
+            document.getElementById("kpiApproved").innerText = productsData.filter(p => p.status === 'approved').length;
+            document.getElementById("kpiRejected").innerText = productsData.filter(p => p.status === 'rejected').length;
+        }
+
+        // Render bảng
+        function renderProductTable(data) {
+            const tbody = document.getElementById("productTableBody");
+            tbody.innerHTML = "";
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Không tìm thấy gói dịch vụ nào.</td></tr>`;
+                return;
+            }
+
+            data.forEach(p => {
+                let statusBadge = '';
+                if (p.status === 'approved') {
+                    statusBadge = `<span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Đang bán</span>`;
+                } else if (p.status === 'pending') {
+                    statusBadge = `<span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half me-1"></i>Chờ duyệt</span>`;
+                } else if (p.status === 'rejected') {
+                    statusBadge = `<span class="badge bg-danger"><i class="fa-solid fa-circle-xmark me-1"></i>Bị từ chối</span>`;
+                } else {
+                    statusBadge = `<span class="badge bg-secondary">Tạm ẩn</span>`;
+                }
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="fw-bold font-monospace">#${p.id}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img src="${p.thumbnail}" class="rounded border me-2" style="width: 45px; height: 45px; object-fit: cover;">
+                            <div>
+                                <div class="fw-bold text-dark text-truncate" style="max-width: 250px;" title="${p.name}">${p.name}</div>
+                                <span class="badge bg-light text-dark border fs-12">${p.category}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="admin-vendors.html?id=${p.vendorId}" class="fw-semibold text-primary text-decoration-none">
+                            <i class="fa-solid fa-store me-1"></i>${p.vendorName}
+                        </a>
+                    </td>
+                    <td><span class="badge bg-info-subtle text-info">${p.category}</span></td>
+                    <td class="text-end fw-bold text-success">${p.price.toLocaleString('vi-VN')} đ</td>
+                    <td class="text-center">${statusBadge}</td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="openProductDetail('${p.id}')" title="Thẩm định chi tiết">
+                                <i class="fa-solid fa-eye me-1"></i>Xem & Duyệt
+                            </button>
+                            ${p.status === 'pending' ? `
+                                <button class="btn btn-success" onclick="quickApprove('${p.id}')" title="Duyệt nhanh"><i class="fa-solid fa-check"></i></button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Mở Modal Thẩm Định
+        function openProductDetail(productId) {
+            selectedProductId = productId;
+            const p = productsData.find(item => item.id === productId);
+            if (!p) return;
+
+            // Reset Box Từ chối
+            document.getElementById("rejectBox").classList.add("d-none");
+            document.getElementById("btnConfirmReject").classList.add("d-none");
+            document.getElementById("btnShowReject").classList.remove("d-none");
+
+            document.getElementById("modalProductName").innerText = p.name;
+            document.getElementById("modalVendorName").innerText = p.vendorName;
+            document.getElementById("modalProductPrice").innerText = p.price.toLocaleString('vi-VN') + " đ";
+            document.getElementById("modalDescription").innerText = p.description;
+            document.getElementById("modalPolicy").innerText = p.cancellationPolicy;
+
+            // Gallery
+            const galleryDiv = document.getElementById("modalGallery");
+            galleryDiv.innerHTML = "";
+            if (p.gallery && p.gallery.length > 0) {
+                p.gallery.forEach(imgUrl => {
+                    galleryDiv.innerHTML += `<img src="${imgUrl}" class="modal-gallery-img">`;
+                });
+            } else {
+                galleryDiv.innerHTML = `<span class="text-muted small">Không có ảnh bộ sưu tập.</span>`;
+            }
+
+            productModalInstance.show();
+        }
+
+        // Phê duyệt gói
+        function approveProduct() {
+            const p = productsData.find(item => item.id === selectedProductId);
+            if (p) {
+                p.status = 'approved';
+                updateKPIs();
+                renderProductTable(productsData);
+                productModalInstance.hide();
+                alert(`Đã phê duyệt đăng bán công khai gói: ${p.name}`);
+            }
+        }
+
+        function quickApprove(productId) {
+            const p = productsData.find(item => item.id === productId);
+            if (p) {
+                p.status = 'approved';
+                updateKPIs();
+                renderProductTable(productsData);
+                alert(`Đã duyệt nhanh thành công gói: ${p.name}`);
+            }
+        }
+
+        // Từ chối gói
+        function toggleRejectBox() {
+            document.getElementById("rejectBox").classList.remove("d-none");
+            document.getElementById("btnConfirmReject").classList.remove("d-none");
+            document.getElementById("btnShowReject").classList.add("d-none");
+        }
+
+        function confirmRejectProduct() {
+            const reason = document.getElementById("rejectReasonInput").value.trim();
+            if (!reason) {
+                alert("Vui lòng nhập lý do từ chối bài đăng!");
+                return;
+            }
+
+            const p = productsData.find(item => item.id === selectedProductId);
+            if (p) {
+                p.status = 'rejected';
+                updateKPIs();
+                renderProductTable(productsData);
+                productModalInstance.hide();
+                alert(`Đã từ chối gói dịch vụ ${p.name}.\nLý do: "${reason}"`);
+            }
+        }
+
+        // Lọc dữ liệu
+        function applyFilters() {
+            const searchVal = document.getElementById("searchInput").value.toLowerCase().trim();
+            const catVal = document.getElementById("categoryFilter").value;
+            const statusVal = document.getElementById("statusFilter").value;
+
+            const filtered = productsData.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(searchVal) || 
+                                    p.id.toLowerCase().includes(searchVal) || 
+                                    p.vendorName.toLowerCase().includes(searchVal);
+                const matchCat = catVal === "" || p.category === catVal;
+                const matchStatus = statusVal === "" || p.status === statusVal;
+
+                return matchSearch && matchCat && matchStatus;
+            });
+
+            renderProductTable(filtered);
+        }
+    </script>
+</body>
+</html>
