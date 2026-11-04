@@ -96,3 +96,106 @@
   });
 })();
 
+// Biến lưu ID người dùng đang thao tác
+let currentUserId = null;
+
+// 1. Mở Modal Khóa tài khoản khẩn cấp
+function openBanModal(userId) {
+    currentUserId = userId;
+    const modalElement = document.getElementById('banModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    } else {
+        alert('Không tìm thấy giao diện Modal khóa tài khoản!');
+    }
+}
+
+// 2. Gửi yêu cầu Khóa tài khoản về Server
+async function submitBan() {
+    const duration = document.getElementById('banDuration').value;
+    const reason = document.getElementById('banReason').value.trim();
+    
+    if (!reason) {
+        return alert('Vui lòng nhập lý do khóa tài khoản!');
+    }
+
+    try {
+        const res = await fetch(`/admin/users/${currentUserId}/ban`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ duration, reason })
+        });
+
+        if (res.ok) {
+            alert('Đã khóa tài khoản thành công!');
+            location.reload();
+        } else {
+            alert('Có lỗi xảy ra khi thực hiện khóa tài khoản.');
+        }
+    } catch (err) {
+        console.error('Lỗi khi khóa tài khoản:', err);
+    }
+}
+
+// 3. Xóa ảnh đại diện vi phạm tiêu chuẩn
+async function deleteAvatar(userId) {
+    if (confirm('Bạn có chắc chắn muốn xóa ảnh đại diện này do vi phạm tiêu chuẩn cộng đồng?')) {
+        try {
+            const res = await fetch(`/admin/users/${userId}/avatar`, { 
+                method: 'DELETE' 
+            });
+            if (res.ok) {
+                alert('Đã xóa ảnh đại diện thành công!');
+                location.reload();
+            }
+        } catch (err) {
+            console.error('Lỗi xóa avatar:', err);
+        }
+    }
+}
+
+// 4. Thêm ghi chú nội bộ Admin
+async function addInternalNote(userId) {
+    const input = document.getElementById('newNoteInput');
+    const content = input.value.trim();
+    
+    if (!content) {
+        return alert('Vui lòng nhập nội dung ghi chú nội bộ!');
+    }
+
+    try {
+        const res = await fetch(`/admin/users/${userId}/notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content })
+        });
+
+        if (res.ok) {
+            location.reload();
+        }
+    } catch (err) {
+        console.error('Lỗi thêm ghi chú:', err);
+    }
+}
+
+// 5. Đặt lại mật khẩu cho khách hàng
+async function resetPassword(userId) {
+    if (confirm('Tự động tạo mật khẩu mới hoặc gửi link khôi phục về email khách hàng?')) {
+        try {
+            const res = await fetch(`/admin/users/${userId}/reset-password`, { 
+                method: 'POST' 
+            });
+            if (res.ok) {
+                alert('Đã gửi thông tin đặt lại mật khẩu thành công!');
+            }
+        } catch (err) {
+            console.error('Lỗi đặt lại mật khẩu:', err);
+        }
+    }
+}
+
+// 6. Mở khung Chat hỗ trợ trực tiếp
+function openLiveChat(userId) {
+    window.location.href = `/admin/chat?userId=${userId}`;
+}

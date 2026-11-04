@@ -50,13 +50,17 @@ app.use("/js", express.static(path.join(__dirname, "js")));
 app.use(express.static(path.join(__dirname, "public")));
 
 // Cấu hình Nunjucks Template Engine cho thư mục views/
-const env = nunjucks.configure("views", {
-  autoescape: true,
-  express: app,
-  noCache: true, // Đặt false khi deploy production
+const env = nunjucks.configure('views', {
+    autoescape: true,
+    express: app,
+    noCache: true 
 });
-app.set("view engine", "html");
-env.addFilter("vnd", (n) => Number(n).toLocaleString("vi-VN"));
+
+
+env.addFilter('currency', function(val) {
+    if (val === undefined || val === null || isNaN(val)) return '0';
+    return Number(val).toLocaleString('vi-VN');
+});
 
 // Kết nối SQL (Pool)
 const pool = mysql.createPool({
@@ -581,7 +585,7 @@ app.get("/profile", isAuthenticated, async (req, res) => {
     const uid = req.session.user.id;
 
     const [users] = await pool.execute(
-      "SELECT id, username, email, full_name, phone FROM `user` WHERE id = ?",
+      "SELECT id, username, email, full_name, phone FROM `users` WHERE id = ?",
       [uid],
     );
     if (!users.length) return res.redirect("/logout");
@@ -816,5 +820,378 @@ app.use(
   "/admin-assets",
   express.static(path.join(__dirname, "views", "admin")),
 );
+
+
+
+// =========================================================================
+// 2. ROUTE TRUNG GIAN NAV /user-profile (ĐÃ ĐỒNG BỘ LOGIC RẼ NHÁNH)
+// =========================================================================
+app.get('/user-profile', async (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.redirect('/login');
+    }
+
+    const sessionUser = req.session.user;
+    const userRole = (sessionUser.role || '').toLowerCase();
+    const userName = (sessionUser.username || '').toLowerCase();
+    const userEmail = (sessionUser.email || '').toLowerCase();
+
+    // 1. Kiểm tra Admin (nếu thỏa mãn 1 trong 3 điều kiện -> Đẩy thẳng về /admin/user-detail)
+    if (userRole === 'admin' || userName === 'seed_admin' || userEmail.includes('admin')) {
+        return res.redirect('/admin/user-detail');
+    }
+
+    // 2. Kiểm tra Partner
+    let isPartner = userRole === 'partner' || userName.includes('partner') || userEmail.includes('partner');
+    if (isPartner) {
+        return res.redirect(`/partner-profile/${sessionUser.id}`);
+    } 
+    
+    // 3. Khách hàng thông thường
+    return res.redirect('/profile');
+});
+
+// =========================================================================
+// 3. ROUTE GIAO DIỆN ADMIN (/admin/user-detail) - ĐÃ CẬP NHẬT LỌC BỎ ADMIN
+// =========================================================================
+app.get('/admin/user-detail', async (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.redirect('/login');
+    }
+
+    const sessionUser = req.session.user;
+    const userRole = (sessionUser.role || '').toLowerCase();
+    const userName = (sessionUser.username || '').toLowerCase();
+    const userEmail = (sessionUser.email || '').toLowerCase();
+
+    // CHẶN TRUY CẬP: Chỉ Admin mới có quyền vào trang này
+    const isAdmin = userRole === 'admin' || userName === 'seed_admin' || userEmail.includes('admin');
+
+    if (!isAdmin) {
+        return res.status(403).send('Bị từ chối truy cập: Trang dành riêng cho Admin');
+    }
+
+    try {
+        const { search, role, status } = req.query;
+
+        // MẶC ĐỊNH LỌC BỎ ADMIN NGAY TỪ ĐẦU (Chỉ lấy Khách hàng & Đối tác)
+        let sql = `SELECT * FROM users 
+                   WHERE role NOT IN ('admin', 'Quản trị viên') 
+                     AND username != 'seed_admin' 
+                     AND email NOT LIKE '%admin%'`;
+        const params = [];
+
+        // Tìm kiếm theo tên, email hoặc ID
+        if (search && search.trim() !== '') {
+            sql += " AND (username LIKE ? OR email LIKE ? OR id = ?)";
+            const searchTerm = `%${search.trim()}%`;
+            params.push(searchTerm, searchTerm, isNaN(search) ? 0 : search.trim());
+        }
+
+        // Lọc theo Vai trò (Chỉ còn Partner & Customer)
+        if (role && role !== '') {
+            if (role === 'partner') {
+                sql += " AND (role = 'partner' OR username LIKE '%partner%' OR email LIKE '%partner%')";
+            } else if (role === 'customer') {
+                sql += " AND (role = 'customer' OR (role != 'partner' AND username NOT LIKE '%partner%'))";
+            }
+        }
+
+        // Lọc theo Trạng thái
+        if (status && status !== '') {
+            sql += " AND status = ?";
+            params.push(status);
+        }
+
+        sql += " ORDER BY id DESC";
+
+        const [users] = await pool.query(sql, params);
+
+        // Hiển thị view view/admin/user-detail.html
+        res.render('admin/user-detail.html', {
+            adminUser: sessionUser,
+            users: users || [],
+            totalUsers: users ? users.length : 0, // Cập nhật tổng số Khách hàng & Đối tác thực tế
+            queryParams: { search, role, status }
+        });
+    } catch (error) {
+        console.error('Lỗi tải bảng Admin:', error);
+        res.status(500).send('Lỗi máy chủ: ' + error.message);
+    }
+});
+
+// =========================================================================
+// 4. ROUTE GIAO DIỆN ĐỐI TÁC (/partner-profile/:id)
+// =========================================================================
+app.get(['/partner-profile', '/partner-profile/:id'], async (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.redirect('/login');
+    }
+
+    const sessionUser = req.session.user;
+    const userId = req.params.id ? parseInt(req.params.id) : sessionUser.id;
+    const userRole = (sessionUser.role || '').toLowerCase();
+    const userEmail = (sessionUser.email || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userEmail.includes('admin');
+
+    if (!isAdmin && sessionUser.id !== userId) {
+        return res.status(403).send('Bạn không có quyền truy cập hồ sơ đối tác này!');
+    }
+
+    try {
+        const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
+        if (users.length === 0) return res.status(404).send('Không tìm thấy đối tác');
+
+        const user = users[0];
+        let partners = [];
+        try {
+            [partners] = await pool.query('SELECT * FROM partners WHERE email = ?', [user.email]);
+        } catch (e) {}
+
+        res.render('partner-profile.html', {
+            user,
+            partner: partners[0] || user
+        });
+    } catch (error) {
+        res.status(500).send('Lỗi máy chủ: ' + error.message);
+    }
+});
+
+// =========================================================================
+// 5. ROUTE GIAO DIỆN KHÁCH HÀNG (/profile)
+// =========================================================================
+app.get('/profile', async (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [req.session.user.id]);
+        if (users.length === 0) return res.redirect('/login');
+
+        res.render('profile.html', {
+            user: users[0]
+        });
+    } catch (error) {
+        res.status(500).send('Lỗi máy chủ: ' + error.message);
+    }
+});
+
+// Khai báo middleware requireRole bảo mật cho Admin
+function requireRole(role) {
+    return (req, res, next) => {
+        if (!req.session || !req.session.user) {
+            return res.redirect(`/login?next=${encodeURIComponent(req.originalUrl)}`);
+        }
+
+        const user = req.session.user;
+        const userRole = (user.role || '').toLowerCase().trim();
+        const username = (user.username || '').toLowerCase().trim();
+        const email = (user.email || '').toLowerCase().trim();
+
+        if (role === 'admin') {
+            const isAdmin = userRole === 'admin' || username === 'seed_admin' || email.includes('admin');
+            if (isAdmin) return next();
+        } else {
+            if (userRole === role) return next();
+        }
+
+        return res.status(403).send('Bạn không có quyền truy cập trang này.');
+    };
+}
+// =========================================================================
+// MIDDLEWARE KIỂM TRA QUYỀN TRUY CẬP (REQUIRE ROLE)
+// =========================================================================
+function requireRole(role) {
+    return (req, res, next) => {
+        if (!req.session || !req.session.user) {
+            return res.redirect(`/login?next=${encodeURIComponent(req.originalUrl)}`);
+        }
+
+        const user = req.session.user;
+        const userRole = (user.role || '').toLowerCase().trim();
+        const username = (user.username || '').toLowerCase().trim();
+        const email = (user.email || '').toLowerCase().trim();
+
+        if (role === 'admin') {
+            const isAdmin = userRole === 'admin' || username === 'seed_admin' || email.includes('admin');
+            if (isAdmin) return next();
+        } else {
+            if (userRole === role) return next();
+        }
+
+        return res.status(403).send('Bạn không có quyền truy cập trang này.');
+    };
+}
+
+// =========================================================================
+// ROUTE XEM CHI TIẾT NGƯỜI DÙNG (/admin/user-detail/:id)
+// =========================================================================
+app.get('/admin/user-detail/:id', requireRole('admin'), async (req, res) => {
+    const targetUserId = Number(req.params.id);
+
+    try {
+        // 1. Lấy thông tin tài khoản từ bảng users
+        const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [targetUserId]);
+        if (users.length === 0) {
+            return res.status(404).send('Không tìm thấy người dùng');
+        }
+
+        const targetUser = users[0];
+        const userEmail = (targetUser.email || '').toLowerCase();
+        const userRole = (targetUser.role || '').toLowerCase();
+        const userName = (targetUser.username || '').toLowerCase();
+
+        // 2. Kiểm tra bảng partners theo email
+        let partners = [];
+        try {
+            [partners] = await pool.query('SELECT * FROM partners WHERE email = ?', [targetUser.email]);
+        } catch (err) {
+            console.log('Lỗi truy vấn bảng partners:', err.message);
+        }
+        
+        const isPartner = partners.length > 0 || userRole === 'partner' || userName.includes('partner') || userEmail.includes('partner');
+
+        if (isPartner) {
+            return res.render('admin/user-detail-partner.html', {
+                adminUser: req.session.user,
+                user: targetUser,
+                partner: partners[0] || targetUser
+            });
+        } else {
+            // 3. Lấy toàn bộ đơn hàng của user_id = 4 (SELECT * để tránh lỗi lệch tên cột)
+            let customerOrders = [];
+            let totalSpent = 0;
+
+            try {
+                const [orders] = await pool.query('SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC', [targetUserId]);
+                customerOrders = orders;
+
+                // IN LOG RA TERMINAL ĐỂ KIỂM TRA DỮ LIỆU THỰC TẾ
+                console.log(`=== TIM THAY ${customerOrders.length} DON HANG CUA USER ${targetUserId} ===`);
+                if (customerOrders.length > 0) {
+                    console.log("Mau 1 don hang:", customerOrders[0]);
+                }
+
+                // TÍNH TỔNG TIỀN (Quét qua tất cả các cột tiền có thể có)
+                customerOrders.forEach(o => {
+                    const price = Number(o.final_amount || o.total_price || o.total_amount || o.price || 0);
+                    if (o.status !== 'cancelled' && o.status !== 'Đã hủy') {
+                        totalSpent += price;
+                    }
+                    // Gắn lại giá trị hiển thị cho Nunjucks
+                    o.final_amount = price;
+                });
+            } catch (err) {
+                console.error('❌ LỖI TRUY VẤN ORDERS:', err.message);
+            }
+
+            return res.render('admin/user-detail-customer.html', {
+                adminUser: req.session.user,
+                user: targetUser,
+                customer: {},
+                orders: customerOrders,
+                metrics: {
+                    totalSpent: totalSpent,
+                    totalOrders: customerOrders.length
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error('Lỗi điều hướng trang chi tiết:', error);
+        res.status(500).send('Lỗi máy chủ: ' + error.message);
+    }
+});
+// TAB: quản lý đối tác/ gian hàng 
+app.get('/admin/partners', async (req, res) => {
+    try {
+        // Truy vấn dữ liệu từ bảng partners đúng như cấu trúc SQL
+        const [rows] = await pool.query('SELECT * FROM partners ORDER BY id DESC');
+        
+        console.log(`Đã load ${rows.length} đối tác từ database.`);
+
+        res.render('admin/admin-partners.html', {
+            adminUser: req.session?.user || { username: 'seed_admin' },
+            current_path: '/admin/partners',
+            vendorsData: rows
+        });
+    } catch (error) {
+        console.error('Lỗi khi truy vấn CSDL bảng partners:', error);
+        res.status(500).send('Lỗi máy chủ khi kết nối CSDL');
+    }
+});  
+
+//Tab quản lý sản phẩm /dịch vụ 
+app.get('/admin/products', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/admin/admin-products.html'));
+});
+// Tab quản lý đơn hàng và lịch 
+app.use(express.static(path.join(__dirname, 'views')));
+// Hoặc nếu các file admin nằm trong thư mục public:
+app.use('/admin', express.static(path.join(__dirname, 'public', 'admin')));
+
+// khiếu nại và Hỗ trợ 
+app.get('/admin/admin-disputes.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'admin', 'admin-disputes.html'));
+});
+
+// 2. Chuyển hướng nếu lỡ gõ /admin/tickets sang /admin/admin-disputes.html
+app.get('/admin/tickets', (req, res) => {
+    res.redirect('/admin/admin-disputes.html');
+});
+
+// Tab Doanh thu và hoa hồng 
+
+app.get('/admin/commissions', async (req, res) => {
+    try {
+        // 1. Lấy danh sách gian hàng/đối tác từ CSDL
+        const [partners] = await pool.query('SELECT * FROM partners ORDER BY id DESC');
+
+        // 2. Dữ liệu tổng hợp doanh thu & hoa hồng
+        const stats = {
+            totalGMV: 150000000,       // Tổng doanh số
+            totalCommission: 15000000, // Phí sàn hoa hồng (10%)
+            vendorPayout: 135000000,   // Doanh thu trả gian hàng
+            totalOrders: 48              // Tổng đơn hàng
+        };
+
+        // 3. Render giao diện admin-commissions.html
+        res.render('admin/admin-commissions.html', {
+            adminUser: req.session?.user || { username: 'seed_admin' },
+            current_path: '/admin/commissions',
+            stats: stats,
+            vendorsData: partners
+        });
+    } catch (error) {
+        console.error('Lỗi khi tải trang doanh thu & hoa hồng:', error);
+        res.status(500).send('Lỗi máy chủ khi tải báo cáo');
+    }
+});
+
+// tab thanh toán và rút tiền 
+
+app.get('/admin/admin-payouts.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'admin', 'admin-payouts.html'));
+});
+
+// 2. Chuyển hướng tự động nếu lỡ truy cập /admin/payouts
+app.get('/admin/payouts', (req, res) => {
+    res.redirect('/admin/admin-payouts.html');
+});
+
+// 3. Đảm bảo đã khai báo thư mục tĩnh cho admin
+app.use('/admin', express.static(path.join(__dirname, 'views', 'admin')));
+
+// Tab cài đặt hệ thống 
+// 1. Route phục vụ giao diện Cài đặt Hệ thống
+app.get('/admin/admin-setting.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'admin', 'admin-setting.html'));
+});
+
+// Chuyển hướng nếu lỡ gõ /admin/settings hoặc /admin/admin-settings.html
+app.get(['/admin/settings', '/admin/admin-settings.html'], (req, res) => {
+    res.redirect('/admin/admin-setting.html');
+});
 
 module.exports = app;

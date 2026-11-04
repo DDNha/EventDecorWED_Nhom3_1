@@ -258,3 +258,18 @@ window.addEventListener("load", function () {
     }
   }
 });
+
+app.post('/login', async (req, res) => {
+    // ... (logic kiểm tra username/password thành công)
+    
+    req.session.user = user; // Lưu thông tin session
+
+    // KIỂM TRA ROLE ĐỂ CHUYỂN HƯỚNG ĐÚNG ROUTE ADMIN
+    if (user.role === 'admin') {
+        // Chuyển hướng sang giao diện Admin
+        return res.redirect('/admin/user-detail'); 
+    } else {
+        // Khách hàng thông thường về trang profile cá nhân
+        return res.redirect('/profile'); 
+    }
+});
