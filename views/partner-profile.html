@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Hub - Quản Lý Gian Hàng</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --sidebar-bg: #1e293b;
+            --sidebar-active: #0ea5e9;
+            --main-bg: #f8fafc;
+        }
+
+        body {
+            background-color: var(--main-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background-color: var(--sidebar-bg);
+            color: #94a3b8;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sidebar-brand {
+            padding: 24px;
+            color: #38bdf8;
+            font-weight: 700;
+            font-size: 1.25rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .nav-link-custom {
+            color: #94a3b8;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-link-custom:hover {
+            color: #f8fafc;
+            background-color: #334155;
+        }
+
+        .nav-link-custom.active {
+            color: #ffffff;
+            background-color: var(--sidebar-active);
+            border-left-color: #38bdf8;
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        .tab-pane-custom {
+            display: none;
+        }
+        .tab-pane-custom.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-custom {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .logo-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 32px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= MENU BÊN TRÁI (SIDEBAR) ================= -->
+    <div class="sidebar">
+        <div>
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-store me-2"></i>PARTNER HUB
+            </div>
+            
+            <div class="nav flex-column mt-3">
+                <a class="nav-link-custom active" onclick="switchTab('tab-overview', this)">
+                    <i class="fa-solid fa-chart-pie me-2"></i>Tổng quan
+                </a>
+                <a class="nav-link-custom" onclick="switchTab('tab-orders', this)">
+                    <i class="fa-solid fa-receipt me-2"></i>Đơn đặt tiệc
+                </a>
+                <a class="nav-link-custom" onclick="switchTab('tab-services', this)">
+                    <i class="fa-solid fa-boxes-packing me-2"></i>Gói dịch vụ
+                </a>
+                <a class="nav-link-custom" onclick="switchTab('tab-wallet', this)">
+                    <i class="fa-solid fa-wallet me-2"></i>Ví & Doanh thu
+                </a>
+                <a class="nav-link-custom" onclick="switchTab('tab-profile', this)">
+                    <i class="fa-solid fa-store me-2"></i>Hồ sơ gian hàng
+                </a>
+            </div>
+        </div>
+
+        <div class="p-3 border-top border-secondary border-opacity-25">
+            <a href="/" class="btn btn-warning w-100 rounded-pill fw-semibold btn-sm">
+                <i class="fa-solid fa-house me-2"></i>Về trang chủ sàn
+            </a>
+        </div>
+    </div>
+
+    <!-- ================= NỘI DUNG CHÍNH (MAIN CONTENT) ================= -->
+    <div class="main-content">
+
+        <!-- HEADER TRÊN CÙNG -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold mb-1" id="pageTitle">Hồ Sơ & Cài Đặt Gian Hàng</h4>
+                <p class="text-muted small mb-0" id="pageSubTitle">Quản lý thông tin thương hiệu và tài khoản nhận thanh toán</p>
+            </div>
+            <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                <i class="fa-solid fa-power-off me-1"></i>Đăng xuất
+            </a>
+        </div>
+
+ <!-- 1. TAB TỔNG QUAN -->
+<div id="tab-overview" class="tab-pane-custom active">
+    
+    <!-- A. CÁC THẺ CHỈ SỐ VẬN HÀNH (5 METRICS CARDS) -->
+    <div class="row g-3 mb-4">
+        <!-- Metric 1: Doanh thu thực nhận -->
+        <div class="col-md-6 col-lg-4 col-xl">
+            <div class="card card-custom p-3 h-100 border-start border-4 border-success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Doanh thu thực nhận</span>
+                    <span class="badge bg-success-subtle text-success fs-12">Net Payout</span>
+                </div>
+                <!-- Hiển thị động theo CSDL hoặc Filter currency -->
+                <h3 class="fw-bold text-success mb-0 mt-2">
+                    {{ overview.net_revenue | currency if overview and overview.net_revenue is defined else '0' }} đ
+                </h3>
+                <span class="text-muted fs-12 mt-1"><i class="fa-solid fa-circle-info me-1"></i>Đã trừ phí sàn 10%</span>
+            </div>
+        </div>
+
+        <!-- Metric 2: Số dư ví khả dụng & Nút rút tiền -->
+        <div class="col-md-6 col-lg-4 col-xl">
+            <div class="card card-custom p-3 h-100 border-start border-4 border-primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Số dư ví khả dụng</span>
+                    <button class="btn btn-sm btn-primary rounded-pill px-2 py-0 fs-12" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                        <i class="fa-solid fa-wallet me-1"></i>Rút tiền
+                    </button>
+                </div>
+                <!-- Sửa lỗi .toLocaleString() thành filter currency hoặc fallback an toàn -->
+                <h3 class="fw-bold text-primary mb-0 mt-2">
+                    {{ wallet.balance | currency if wallet and wallet.balance is defined else '0' }} đ
+                </h3>
+                <span class="text-muted fs-12 mt-1">Sẵn sàng chuyển khoản Payout</span>
+            </div>
+        </div>
+
+        <!-- Metric 3: Tiệc sắp diễn ra -->
+        <div class="col-md-6 col-lg-4 col-xl">
+            <div class="card card-custom p-3 h-100 border-start border-4 border-warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Tiệc sắp diễn ra (7 ngày)</span>
+                    <span class="badge bg-warning-subtle text-warning fs-12"><i class="fa-solid fa-truck-fast me-1"></i>Thi công</span>
+                </div>
+                <h3 class="fw-bold text-dark mb-0 mt-2">{{ overview.upcoming_events_count if overview and overview.upcoming_events_count is defined else 0 }} Tiệc</h3>
+                <span class="text-warning-emphasis fs-12 mt-1 fw-semibold"><i class="fa-solid fa-triangle-exclamation me-1"></i>Cần chuẩn bị vật tư/nhân sự</span>
+            </div>
+        </div>
+
+        <!-- Metric 4: Đơn chờ xác nhận -->
+        <div class="col-md-6 col-lg-6 col-xl">
+            <div class="card card-custom p-3 h-100 border-start border-4 border-danger">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Đơn chờ xác nhận</span>
+                    <span class="badge bg-danger-subtle text-danger fs-12">Cần xử lý</span>
+                </div>
+                <h3 class="fw-bold text-danger mb-0 mt-2">{{ overview.pending_orders_count if overview and overview.pending_orders_count is defined else 0 }} Đơn</h3>
+                <span class="text-muted fs-12 mt-1"><i class="fa-solid fa-clock me-1"></i>Cần phản hồi trong 24h</span>
+            </div>
+        </div>
+
+        <!-- Metric 5: Đánh giá trung bình -->
+        <div class="col-md-12 col-lg-6 col-xl">
+            <div class="card card-custom p-3 h-100 border-start border-4 border-info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Đánh giá trung bình</span>
+                    <span class="badge bg-info-subtle text-info fs-12">Uy tín gian hàng</span>
+                </div>
+                <h3 class="fw-bold text-warning mb-0 mt-2">{{ partner.rating if partner and partner.rating else '0.0' }} ★</h3>
+                <span class="text-muted fs-12 mt-1">Dựa trên {{ partner.reviews_count if partner and partner.reviews_count else 0 }} lượt đánh giá</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG ĐƠN VỪA PHÁT SINH & WIDGET LỊCH SỰ KIỆN -->
+    <div class="row g-4">
+        
+        <!-- B. BẢNG "ĐƠN ĐẶT TIỆC VỪA PHÁT SINH" -->
+        <div class="col-lg-8">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0"><i class="fa-solid fa-bell text-primary me-2"></i>Đơn Đặt Tiệc Vừa Phát Sinh</h6>
+                    <a href="#tab-orders" class="btn btn-link btn-sm text-decoration-none p-0">Xem tất cả đơn <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Phân loại</th>
+                                <th>Tên dịch vụ</th>
+                                <th>Ngày tổ chức</th>
+                                <th class="text-end">Tổng tiền</th>
+                                <th class="text-center">Trạng thái</th>
+                                <th class="text-center">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_orders and recent_orders.length > 0 %}
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td><a href="#" class="fw-bold text-decoration-none">#{{ order.order_code }}</a></td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">{{ order.customer_name }}</div>
+                                        <div class="text-muted fs-12">{{ order.customer_phone }}</div>
+                                    </td>
+                                    <td>
+                                        {% if order.is_b2b %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" title="MST: {{ order.tax_code }}"><i class="fa-solid fa-building me-1"></i>B2B (VAT)</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-secondary border rounded-pill">B2C Cá nhân</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-truncate" style="max-width: 150px;" title="{{ order.service_name }}">{{ order.service_name }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="text-primary fw-semibold"><i class="fa-solid fa-calendar-day me-1"></i>{{ order.event_date }}</div>
+                                    </td>
+                                    <td class="text-end fw-bold">{{ order.total_amount | currency if order.total_amount is defined else '0' }} đ</td>
+                                    <td class="text-center">
+                                        {% if order.status == 'pending' %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Chờ xác nhận</span>
+                                        {% elif order.status == 'deposited' %}
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">Đã cọc 50%</span>
+                                        {% elif order.status == 'confirmed' %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">Đã xác nhận</span>
+                                        {% elif order.status == 'completed' %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Hoàn thành</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">{{ order.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex gap-1 justify-content-center">
+                                            {% if order.status == 'pending' %}
+                                                <button class="btn btn-sm btn-success rounded-pill px-2" title="Nhận đơn"><i class="fa-solid fa-check me-1"></i>Duyệt</button>
+                                            {% endif %}
+                                            <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 28px; height: 28px;" title="Xem chi tiết" data-bs-toggle="modal" data-bs-target="#orderDetailModal">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">Chưa có đơn đặt tiệc nào mới.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- C. BỘ LỊCH / LỊCH BIỂU SỰ KIỆN -->
+        <div class="col-lg-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0"><i class="fa-solid fa-calendar-days text-info me-2"></i>Lịch Thi Công Sự Kiện</h6>
+                    <span class="badge bg-light text-dark border">Tháng 11/2026</span>
+                </div>
+                
+                <div class="d-flex flex-column gap-3">
+                    {% if upcoming_events and upcoming_events.length > 0 %}
+                        {% for event in upcoming_events %}
+                        <div class="p-3 border-start border-4 border-{{ event.badge_color or 'primary' }} bg-light rounded-end-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="fw-bold text-{{ event.badge_color or 'primary' }} fs-12"><i class="fa-solid fa-clock me-1"></i>{{ event.time_label }}</span>
+                                <span class="badge bg-{{ event.badge_color or 'primary' }}">{{ event.badge_text }}</span>
+                            </div>
+                            <div class="fw-bold text-dark mt-1">{{ event.title }}</div>
+                            <div class="text-muted small"><i class="fa-solid fa-location-dot me-1"></i>{{ event.location }}</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center py-3">Không có lịch thi công trong tháng này.</p>
+                    {% endif %}
+                </div>
+
+                <button class="btn btn-outline-primary btn-sm rounded-pill w-100 mt-3">
+                    <i class="fa-solid fa-calendar-plus me-1"></i>Xem toàn bộ lịch thi công
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- 2. TAB ĐƠN ĐẶT TIỆC -->
+<div id="tab-orders" class="tab-pane-custom active">
+    
+    <!-- THANH LỌC & CHUYỂN TRẠNG THÁI ĐƠN -->
+    <div class="card card-custom p-3 mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h6 class="fw-bold mb-1 fs-5"><i class="fa-solid fa-calendar-check text-primary me-2"></i>Quản Lý Đơn Đặt Tiệc & Sự Kiện</h6>
+                <p class="text-muted small mb-0">Theo dõi tiến độ, xác nhận đơn hàng và quản lý doanh thu đối soát</p>
+            </div>
+            
+            <!-- Bộ lọc trạng thái đơn động -->
+            <div class="btn-group btn-group-sm flex-wrap">
+                <button class="btn btn-outline-primary active">Tất cả ({{ orders_count.all | default(0) }})</button>
+                <button class="btn btn-outline-primary">Chờ xác nhận ({{ orders_count.pending | default(0) }})</button>
+                <button class="btn btn-outline-primary">Đã cọc / Chuẩn bị ({{ orders_count.confirmed | default(0) }})</button>
+                <button class="btn btn-outline-primary">Đã hoàn thành ({{ orders_count.completed | default(0) }})</button>
+                <button class="btn btn-outline-primary">Đã hủy ({{ orders_count.cancelled | default(0) }})</button>
+            </div>
+        </div>
+
+        <hr class="my-3 opacity-25">
+
+        <!-- Ô Tìm kiếm & Lọc thời gian -->
+        <div class="row g-2">
+            <div class="col-md-5">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" id="searchInput" class="form-control bg-light border-start-0" placeholder="Tìm theo mã đơn (#ORD), tên khách hàng, SĐT...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <input type="date" id="filterDate" class="form-control form-control-sm bg-light" title="Lọc theo ngày tổ chức tiệc">
+            </div>
+            <div class="col-md-3">
+                <select id="filterType" class="form-select form-select-sm bg-light">
+                    <option value="">-- Phân loại đơn B2B / B2C --</option>
+                    <option value="b2b">Khách hàng Doanh nghiệp (Có VAT)</option>
+                    <option value="b2c">Khách hàng Cá nhân</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG DANH SÁCH ĐƠN ĐẶT TIỆC -->
+    <div class="card card-custom p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã Đơn & Ngày</th>
+                        <th>Thông Tin Khách Hàng</th>
+                        <th>Thời Gian & Địa Điểm Sự Kiện</th>
+                        <th>Gói Dịch Vụ / Tiệc</th>
+                        <th class="text-end">Thanh Toán & Phí Sàn</th>
+                        <th class="text-center">Loại Đơn & Hóa Đơn</th>
+                        <th class="text-center">Trạng Thái</th>
+                        <th class="text-center" style="min-width: 140px;">Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if orders and orders.length > 0 %}
+                        {% for order in orders %}
+                        <tr>
+                            <td>
+                                <a href="#" class="fw-bold text-decoration-none">#{{ order.order_code }}</a>
+                                <div class="text-muted fs-12">{{ order.created_at }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ order.customer_name }}</div>
+                                <div class="text-muted"><i class="fa-solid fa-phone me-1"></i>{{ order.customer_phone }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-primary"><i class="fa-solid fa-clock me-1"></i>{{ order.event_date }}</div>
+                                <div class="text-muted text-truncate" style="max-width: 200px;" title="{{ order.event_address }}">
+                                    <i class="fa-solid fa-location-dot me-1"></i>{{ order.event_address }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ order.package_name }}</div>
+                                <div class="text-muted fs-12">{{ order.guest_count }} khách / bàn</div>
+                            </td>
+                            <td class="text-end">
+                                <div class="fw-bold text-dark">{{ "{:,.0f}".format(order.total_amount) }} đ</div>
+                                <div class="text-danger fs-12" title="Chiết khấu sàn đối tác trả">Phí sàn ({{ order.commission_rate | default('10%') }}): -{{ "{:,.0f}".format(order.commission_amount) }} đ</div>
+                                <div class="text-success fw-semibold fs-12">Thực nhận: {{ "{:,.0f}".format(order.net_amount) }} đ</div>
+                            </td>
+                            <td class="text-center">
+                                {% if order.is_b2b %}
+                                    <span class="badge bg-purple-subtle text-purple border border-purple-subtle rounded-pill" title="MST: {{ order.tax_code }}"><i class="fa-solid fa-building me-1"></i>B2B (Xuất VAT)</span>
+                                {% else %}
+                                    <span class="badge bg-light text-secondary rounded-pill">B2C Cá nhân</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if order.status == 'pending' %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1"><i class="fa-solid fa-hourglass-half me-1"></i>Chờ duyệt</span>
+                                {% elif order.status == 'confirmed' %}
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="fa-solid fa-truck-ramp-box me-1"></i>Đã cọc (Chuẩn bị)</span>
+                                {% elif order.status == 'completed' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="fa-solid fa-circle-check me-1"></i>Hoàn thành</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Đã hủy</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if order.status == 'pending' %}
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button class="btn btn-sm btn-success rounded-pill px-3" onclick="approveOrder('{{ order.order_code }}')"><i class="fa-solid fa-check me-1"></i>Duyệt</button>
+                                        <button class="btn btn-sm btn-outline-danger rounded-circle" style="width:30px; height:30px;" title="Từ chối đơn" onclick="rejectOrder('{{ order.order_code }}')"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                {% else %}
+                                    <button class="btn btn-sm btn-light rounded-pill border px-3 btn-view-detail" data-order-code="{{ order.order_code }}"><i class="fa-solid fa-eye me-1"></i>Chi tiết</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                <i class="fa-solid fa-box-open fs-3 d-block mb-2"></i>
+                                Chưa có dữ liệu đơn hàng trong hệ thống.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CHI TIẾT ĐƠN TIỆC & ĐỐI SOÁT PHÁP LÝ (MODAL ĐỘNG) -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold" id="modalOrderTitle"><i class="fa-solid fa-file-invoice text-primary me-2"></i>Chi Tiết Đơn Đặt Tiệc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <!-- Hàng 1: Thông tin khách hàng & B2B -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <div class="fw-bold text-dark mb-2"><i class="fa-solid fa-user me-2 text-primary"></i>Thông tin khách hàng:</div>
+                            <div class="small">
+                                <div><strong>Họ tên:</strong> <span id="modalCustomerName">--</span></div>
+                                <div><strong>Điện thoại hotline:</strong> <span id="modalCustomerPhone">--</span></div>
+                                <div><strong>Email:</strong> <span id="modalCustomerEmail">--</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="modalB2bBox" class="p-3 border rounded-3 bg-purple-subtle border-purple-subtle">
+                            <div class="fw-bold text-purple mb-2"><i class="fa-solid fa-building me-2"></i>Thông tin xuất hóa đơn VAT (B2B):</div>
+                            <div class="small text-dark" id="modalB2bDetails">
+                                <div><strong>Tên công ty:</strong> <span id="modalCompanyName">--</span></div>
+                                <div><strong>Mã số thuế (MST):</strong> <span id="modalTaxCode">--</span></div>
+                                <div><strong>Địa chỉ đăng ký:</strong> <span id="modalCompanyAddress">--</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hàng 2: Chi tiết dịch vụ & Địa điểm tổ chức -->
+                <div class="border rounded-3 p-3 mb-4">
+                    <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-location-dot me-2"></i>Chi Tiết Thi Công & Gói Dịch Vụ</h6>
+                    <div class="row g-3 small">
+                        <div class="col-md-6">
+                            <div><strong>Gói dịch vụ:</strong> <span id="modalPackageName">--</span></div>
+                            <div><strong>Thời gian dựng / Khảo sát:</strong> <span id="modalSetupTime">--</span></div>
+                            <div><strong>Thời gian bắt đầu tiệc:</strong> <span id="modalEventDate">--</span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div><strong>Địa điểm tổ chức:</strong> <span id="modalEventVenue">--</span></div>
+                            <div><strong>Địa chỉ:</strong> <span id="modalEventAddress">--</span></div>
+                            <div><strong>Ghi chú đặc biệt:</strong> <span id="modalSpecialNote">Khách không có ghi chú thêm</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hàng 3: Bảng phân tích dòng tiền & Phí sàn -->
+                <div class="border rounded-3 p-3 bg-light">
+                    <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-calculator me-2 text-success"></i>Bảng Phân Tích Tài Chính & Phí Sàn Đối Tác</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered bg-white mb-0 small">
+                            <tbody>
+                                <tr>
+                                    <td>Tổng giá trị hợp đồng tiệc (Khách trả):</td>
+                                    <td class="text-end fw-bold" id="modalTotalAmount">0 đ</td>
+                                </tr>
+                                <tr>
+                                    <td>Số tiền khách đã đặt cọc qua Sàn:</td>
+                                    <td class="text-end text-primary fw-semibold" id="modalDepositAmount">0 đ</td>
+                                </tr>
+                                <tr>
+                                    <td>Phí hoa hồng sàn thu đối tác (<span id="modalCommissionRate">10%</span>):</td>
+                                    <td class="text-end text-danger" id="modalCommissionAmount">-0 đ</td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td class="fw-bold">Số tiền Thực Nhận về Ví Gian Hàng (Net Payout):</td>
+                                    <td class="text-end fw-bold text-success fs-6" id="modalNetAmount">0 đ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="form-text fs-12 mt-2"><i class="fa-solid fa-shield-halved me-1"></i>Chính sách áp dụng: Hủy tiệc trước 7 ngày hoàn 100% cọc. Tiền payout sẽ tự động khả dụng sau khi tổ chức tiệc xong 24h.</div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-danger rounded-pill px-3"><i class="fa-solid fa-ban me-1"></i>Hủy đơn / Bồi thường</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4"><i class="fa-solid fa-floppy-disk me-1"></i>Cập nhật tiến độ tiệc</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT BẮT SỰ KIỆN NÚT CHI TIẾT VÀ ĐỔ DỮ LIỆU TỪ DATABASE VÀO MODAL -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const detailButtons = document.querySelectorAll('.btn-view-detail');
+    
+    detailButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const orderCode = this.getAttribute('data-order-code');
+            
+            // Gọi API đến Server Node.js để lấy chi tiết đơn từ Database
+            fetch(`/api/orders/${orderCode}`)
+                .then(response => response.json())
+                .then(order => {
+                    // 1. Cập nhật Tiêu đề Modal
+                    document.getElementById('modalOrderTitle').innerHTML = `<i class="fa-solid fa-file-invoice text-primary me-2"></i>Chi Tiết Đơn Đặt Tiệc #${order.order_code}`;
+                    
+                    // 2. Cập nhật Thông tin Khách hàng
+                    document.getElementById('modalCustomerName').textContent = order.customer_name || 'N/A';
+                    document.getElementById('modalCustomerPhone').textContent = order.customer_phone || 'N/A';
+                    document.getElementById('modalCustomerEmail').textContent = order.customer_email || 'N/A';
+                    
+                    // 3. Cập nhật B2B
+                    const b2bBox = document.getElementById('modalB2bBox');
+                    if (order.is_b2b) {
+                        b2bBox.style.display = 'block';
+                        document.getElementById('modalCompanyName').textContent = order.company_name || 'N/A';
+                        document.getElementById('modalTaxCode').textContent = order.tax_code || 'N/A';
+                        document.getElementById('modalCompanyAddress').textContent = order.company_address || 'N/A';
+                    } else {
+                        b2bBox.style.display = 'none';
+                    }
+                    
+                    // 4. Chi tiết Dịch vụ & Địa điểm
+                    document.getElementById('modalPackageName').textContent = order.package_name || 'N/A';
+                    document.getElementById('modalSetupTime').textContent = order.setup_time || 'Chưa cập nhật';
+                    document.getElementById('modalEventDate').textContent = order.event_date || 'N/A';
+                    document.getElementById('modalEventVenue').textContent = order.event_venue || 'N/A';
+                    document.getElementById('modalEventAddress').textContent = order.event_address || 'N/A';
+                    document.getElementById('modalSpecialNote').textContent = order.note || 'Khách không có ghi chú thêm';
+                    
+                    // 5. Bảng Tài chính
+                    const total = Number(order.total_amount || 0);
+                    const deposit = Number(order.deposit_amount || (total * 0.5));
+                    const commRate = order.commission_rate || 10;
+                    const commission = Number(order.commission_amount || (total * commRate / 100));
+                    const net = total - commission;
+
+                    document.getElementById('modalTotalAmount').textContent = total.toLocaleString('vi-VN') + ' đ';
+                    document.getElementById('modalDepositAmount').textContent = deposit.toLocaleString('vi-VN') + ' đ';
+                    document.getElementById('modalCommissionRate').textContent = commRate + '%';
+                    document.getElementById('modalCommissionAmount').textContent = '-' + commission.toLocaleString('vi-VN') + ' đ';
+                    document.getElementById('modalNetAmount').textContent = net.toLocaleString('vi-VN') + ' đ';
+                    
+                    // Kích hoạt hiển thị Bootstrap Modal
+                    const modalElement = document.getElementById('orderDetailModal');
+                    const modalInstance = new bootstrap.Modal(modalElement);
+                    modalInstance.show();
+                })
+                .catch(err => console.error('Lỗi lấy chi tiết đơn hàng:', err));
+        });
+    });
+});
+</script>
+
+   <!-- 3. TAB GÓI DỊCH VỤ -->
+<div id="tab-services" class="tab-pane-custom active">
+    
+    <!-- HEADER & NÚT THÊM MỚI -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h6 class="fw-bold mb-1 fs-5">Các gói dịch vụ đăng bán</h6>
+            <p class="text-muted small mb-0">Quản lý các gói trang trí, thiết bị và nhân sự tiệc sự kiện</p>
+        </div>
+        <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+            <i class="fa-solid fa-plus me-1"></i>Thêm gói dịch vụ mới
+        </button>
+    </div>
+
+    <!-- 3. BỘ LỌC & TÌM KIẾM GÓI DỊCH VỤ -->
+    <div class="card card-custom p-3 mb-4">
+        <div class="row g-2">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" class="form-control bg-light border-start-0" placeholder="Tìm kiếm theo tên gói dịch vụ...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select bg-light">
+                    <option value="">-- Tất cả danh mục --</option>
+                    <option value="decor">Trang trí tiệc</option>
+                    <option value="sound">Âm thanh & Ánh sáng</option>
+                    <option value="catering">Catering / Đặt tiệc</option>
+                    <option value="mc">MC & Nhân sự sự kiện</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select bg-light">
+                    <option value="">-- Trạng thái duyệt sàn --</option>
+                    <option value="approved">Đã duyệt (Được bán)</option>
+                    <option value="pending">Chờ Admin duyệt</option>
+                    <option value="rejected">Bị từ chối</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-outline-secondary w-100" title="Tải lại danh sách"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DANH SÁCH THẺ GÓI DỊCH VỤ (CARD GRID) -->
+    <div class="row g-4">
+        {% if services and services.length > 0 %}
+            {% for service in services %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-custom h-100 overflow-hidden shadow-sm {% if not service.is_active and service.approval_status == 'approved' %}opacity-75{% endif %}">
+                    <!-- Thumbnail & Trạng thái sàn -->
+                    <div class="position-relative bg-light text-center py-4 border-bottom" style="height: 160px;">
+                        {% if service.image_url %}
+                            <img src="{{ service.image_url }}" class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" alt="{{ service.name }}">
+                        {% else %}
+                            <div class="h-100 d-flex align-items-center justify-content-center">
+                                {% if service.category_name == 'Âm thanh ánh sáng' %}
+                                    <i class="fa-solid fa-music fa-3x text-info opacity-75"></i>
+                                {% elif service.category_name == 'Catering tiệc' %}
+                                    <i class="fa-solid fa-utensils fa-3x text-warning opacity-75"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-wand-magic-sparkles fa-3x text-primary opacity-75"></i>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Trạng thái Duyệt của Sàn -->
+                        <div class="position-absolute top-0 start-0 m-2">
+                            {% if service.approval_status == 'approved' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1"><i class="fa-solid fa-circle-check me-1"></i>Sàn đã duyệt</span>
+                            {% elif service.approval_status == 'pending' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2 py-1"><i class="fa-solid fa-hourglass-half me-1"></i>Chờ Sàn duyệt</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1" title="{{ service.reject_reason }}"><i class="fa-solid fa-circle-xmark me-1"></i>Bị từ chối</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Badge Danh mục -->
+                        <span class="position-absolute bottom-0 end-0 m-2 badge bg-dark bg-opacity-75 rounded-pill">{{ service.category_name or 'Trang trí' }}</span>
+                    </div>
+
+                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1 text-truncate" title="{{ service.name }}">{{ service.name }}</h6>
+                            <div class="fs-5 fw-bold text-primary mb-2">
+                                {{ service.price if service.price else '3.500.000' }} đ
+                                </div>
+                        </div>
+
+                        <!-- Thống kê hiệu suất gói -->
+                        <div class="bg-light p-2 rounded-3 d-flex justify-content-between text-center small my-2 border">
+                            <div>
+                                <span class="text-muted d-block fs-12">Lượt xem</span>
+                                <span class="fw-bold text-dark"><i class="fa-solid fa-eye text-secondary me-1"></i>{{ service.views or 0 }}</span>
+                            </div>
+                            <div class="border-start border-end px-2">
+                                <span class="text-muted d-block fs-12">Đã bán</span>
+                                <span class="fw-bold {% if service.sales_count > 0 %}text-success{% else %}text-muted{% endif %}"><i class="fa-solid fa-cart-shopping me-1"></i>{{ service.sales_count or 0 }} {% if service.sales_count > 0 %}tiệc{% endif %}</span>
+                            </div>
+                            <div>
+                                <span class="text-muted d-block fs-12">Đánh giá</span>
+                                <span class="fw-bold {% if service.rating %}text-warning{% else %}text-muted{% endif %}"><i class="fa-solid fa-star me-1"></i>{{ service.rating or '--' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Công tắc bật/tắt & Thao tác -->
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <div class="form-check form-switch m-0" title="Bật/Tắt hiển thị nhận đơn gói này">
+                                <input class="form-check-input style-switch" type="checkbox" role="switch" id="switch-{{ service.id }}" {% if service.is_active %}checked{% endif %} {% if service.approval_status != 'approved' %}disabled{% endif %}>
+                                <label class="form-check-label small fw-semibold {% if service.approval_status != 'approved' %}text-muted{% elif service.is_active %}text-success{% else %}text-secondary{% endif %} ms-1" for="switch-{{ service.id }}">
+                                    {% if service.approval_status != 'approved' %}
+                                        Chờ duyệt
+                                    {% elif service.is_active %}
+                                        Đang kinh doanh
+                                    {% else %}
+                                        Đã tạm ẩn
+                                    {% endif %}
+                                </label>
+                            </div>
+
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle me-1" style="width:32px; height:32px;" title="Chỉnh sửa gói"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn btn-sm btn-outline-danger rounded-circle" style="width:32px; height:32px;" title="Xóa gói"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted">Chưa có gói dịch vụ nào.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+       <!-- 4. TAB VÍ & DOANH THU -->
+<div id="tab-wallet" class="tab-pane-custom active">
+    
+    <!-- KPI SUMMARY CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom p-4 bg-primary text-white h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <span class="opacity-75 small">Số dư khả dụng</span>
+                    <h3 class="fw-bold text-primary mb-0 mt-2">{{ wallet.balance if wallet and wallet.balance else '15.000.000' }} đ</h3>
+                </div>
+                <button class="btn btn-light rounded-pill btn-sm text-primary fw-semibold w-auto align-self-start mt-3" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                    <i class="fa-solid fa-building-columns me-1"></i>Yêu cầu rút tiền
+                </button>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom p-4 h-100">
+                <span class="text-muted small">Số dư tạm giữ (Chờ đối soát)</span>
+                <h3 class="fw-bold text-warning my-2">{{ wallet.pending_balance | default('0') }} đ</h3>
+                <p class="text-muted small mb-0 fs-12">Cộng vào số dư khả dụng sau khi tiệc hoàn thành 24h.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom p-4 h-100">
+                <span class="text-muted small">Tổng doanh thu thực nhận</span>
+                <h3 class="fw-bold text-success my-2">{{ wallet.total_net_payout | default('0') }} đ</h3>
+                <span class="badge bg-success-subtle text-success w-auto align-self-start">Đã khấu trừ phí sàn</span>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom p-4 h-100">
+                <span class="text-muted small">Tổng hoa hồng đã trả sàn</span>
+                <h3 class="fw-bold text-danger my-2">{{ wallet.total_commission | default('0') }} đ</h3>
+                <span class="badge bg-danger-subtle text-danger w-auto align-self-start">Mức phí áp dụng: {{ partner.commission_rate | default('10%') }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- BIỂU ĐỒ BÁO CÁO DOANH THU -->
+        <div class="col-lg-8">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0"><i class="fa-solid fa-chart-line text-primary me-2"></i>Biểu Đồ Doanh Thu & Biến Động Số Dư</h6>
+                    <select class="form-select form-select-sm w-auto">
+                        <option value="7days">7 ngày qua</option>
+                        <option value="month" selected>Tháng này</option>
+                        <option value="quarter">Quý này</option>
+                        <option value="year">Năm nay</option>
+                    </select>
+                </div>
+                <div class="chart-container position-relative" style="height: 260px;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- CẤU HÌNH TÀI KHOẢN NGÂN HÀNG THỤ HƯỞNG -->
+        <div class="col-lg-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0"><i class="fa-solid fa-credit-card text-success me-2"></i>Tài Khoản Nhận Payout</h6>
+                    <a href="#tab-profile" class="btn btn-link btn-sm text-decoration-none p-0">Thay đổi</a>
+                </div>
+                <div class="bg-light p-3 rounded-3 border">
+                    {% if partner.bank_account_number %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fa-solid fa-building-columns fs-4 text-primary me-3"></i>
+                        <div>
+                            <div class="fw-bold text-dark">{{ partner.bank_name }}</div>
+                            <small class="text-muted">Chi nhánh: {{ partner.bank_branch }}</small>
+                        </div>
+                    </div>
+                    <hr class="my-2">
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Số tài khoản:</span>
+                            <span class="fw-bold font-monospace">{{ partner.bank_account_number }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Chủ tài khoản:</span>
+                            <span class="fw-bold">{{ partner.bank_account_holder }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Trạng thái:</span>
+                            <span class="badge bg-success-subtle text-success"><i class="fa-solid fa-shield-check me-1"></i>Đã xác thực</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        <small>Chưa liên kết tài khoản ngân hàng</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LỊCH SỬ GIAO DỊCH -->
+    <div class="card card-custom p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0"><i class="fa-solid fa-receipt text-warning me-2"></i>Lịch Sử Giao Dịch & Khấu Trừ Phí Sàn</h6>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill"><i class="fa-solid fa-download me-1"></i>Xuất Excel đối soát</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Thời gian</th>
+                        <th>Mã đơn tiệc</th>
+                        <th>Khách hàng</th>
+                        <th class="text-end">Doanh thu gộp</th>
+                        <th class="text-end">Phí sàn (10%)</th>
+                        <th class="text-end">Thực nhận (Net)</th>
+                        <th class="text-center">Loại giao dịch</th>
+                        <th class="text-center">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if transactions and transactions.length > 0 %}
+                        {% for tx in transactions %}
+                        <tr>
+                            <td>{{ tx.created_at }}</td>
+                            <td><a href="#" class="fw-semibold text-decoration-none">#{{ tx.order_code }}</a></td>
+                            <td>{{ tx.customer_name }}</td>
+                            <td class="text-end fw-semibold">+{{ tx.gross_amount }} đ</td>
+                            <td class="text-end text-danger">-{{ tx.commission_fee }} đ</td>
+                            <td class="text-end fw-bold text-success">+{{ tx.net_amount }} đ</td>
+                            <td class="text-center"><span class="badge bg-info-subtle text-info">{{ tx.transaction_type }}</span></td>
+                            <td class="text-center"><span class="badge bg-success">{{ tx.status }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">Chưa có lịch sử giao dịch phát sinh.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- LỊCH SỬ RÚT TIỀN -->
+    <div class="card card-custom p-4">
+        <h6 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-info me-2"></i>Lịch Sử Yêu Cầu Rút Tiền</h6>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã lệnh rút</th>
+                        <th>Thời gian tạo</th>
+                        <th>Số tiền rút</th>
+                        <th>Ngân hàng nhận</th>
+                        <th>Trạng thái đối soát</th>
+                        <th class="text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if withdrawals and withdrawals.length > 0 %}
+                        {% for w in withdrawals %}
+                        <tr>
+                            <td class="fw-semibold">#WD-{{ w.id }}</td>
+                            <td>{{ w.created_at }}</td>
+                            <td class="fw-bold text-danger">-{{ w.amount }} đ</td>
+                            <td>{{ w.bank_info }}</td>
+                            <td>
+                                {% if w.status == 'success' %}
+                                    <span class="badge bg-success">Thành công</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Đang xử lý</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center"><button class="btn btn-light btn-sm"><i class="fa-solid fa-eye"></i></button></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Chưa có yêu cầu rút tiền nào.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+        <!--5 TAB HỒ SƠ GIAN HÀNG -->
+<div id="tab-profile" class="tab-pane-custom active">
+    <!-- Form tổng bao bọc hoặc chia theo từng form gửi dữ liệu (enctype="multipart/form-data" để gửi file/ảnh) -->
+    <form action="/partner/update-profile" method="POST" enctype="multipart/form-data">
+        <div class="row g-4">
+            
+            <!-- CỘT TRÁI: AVATAR, CHÍNH SÁCH SÀN & TRẠNG THÁI -->
+            <div class="col-lg-4">
+                <!-- Card Thông tin nhận diện & Trạng thái -->
+                <div class="card card-custom p-4 text-center mb-4">
+                    <!-- Banner & Avatar Gian Hàng -->
+                    <div class="position-relative mb-3">
+                        <div class="card-cover-banner rounded-3 bg-light overflow-hidden position-relative" style="height: 120px; background: url('{{ partner.banner_url if partner.banner_url else '/static/images/default-banner.jpg' }}') center/cover no-repeat;">
+                            <label class="btn btn-sm btn-dark position-absolute bottom-0 end-0 m-2 opacity-75" title="Đổi ảnh bìa">
+                                <i class="fa-solid fa-camera me-1"></i>Đổi bìa
+                                <input type="file" name="banner" accept="image/*" class="d-none">
+                            </label>
+                        </div>
+                        <div class="logo-placeholder-container mx-auto position-relative" style="margin-top: -40px; width: 80px; height: 80px;">
+                            {% if partner.logo_url %}
+                                <img src="{{ partner.logo_url }}" class="rounded-circle img-thumbnail w-100 h-100 object-fit-cover" alt="Logo">
+                            {% else %}
+                                <div class="logo-placeholder rounded-circle bg-white border shadow-sm w-100 h-100 d-flex align-items-center justify-content-center text-primary fs-3">
+                                    <i class="fa-solid fa-store"></i>
+                                </div>
+                            {% endif %}
+                            <label class="btn btn-sm btn-primary rounded-circle position-absolute bottom-0 end-0 p-1" style="width: 28px; height: 28px; line-height: 1;" title="Tải logo mới">
+                                <i class="fa-solid fa-pencil small"></i>
+                                <input type="file" name="logo" accept="image/*" class="d-none">
+                            </label>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-1">{{ partner.name if partner.name else user.username }}</h5>
+                    <p class="text-muted small mb-2">{{ user.email }}</p>
+                    <span class="badge bg-info text-dark rounded-pill px-3 py-2 mb-3">Đối tác Cung cấp Dịch vụ</span>
+                    
+                    <div class="bg-light p-3 rounded-3 text-start small mb-3">
+                        <div class="fw-semibold text-success mb-1"><i class="fa-solid fa-circle-check me-1"></i>Trạng thái xác minh:</div>
+                        <div class="text-muted">Đã được Admin phê duyệt</div>
+                    </div>
+
+                    <!-- Tỷ lệ hoa khấu / Phí sàn -->
+                    <div class="border border-warning bg-warning-subtle p-3 rounded-3 text-start small">
+                        <div class="fw-bold text-warning-emphasis mb-1">
+                            <i class="fa-solid fa-percent me-1"></i>Phí hoa hồng sàn (Commission):
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span class="text-muted">Mức phí áp dụng:</span>
+                            <span class="fs-6 fw-bold text-danger">{{ partner.commission_rate if partner.commission_rate else '10%' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Giờ làm việc & Hotline -->
+                <div class="card card-custom p-4 mb-4">
+                    <h6 class="fw-bold mb-3"><i class="fa-solid fa-clock text-primary me-2"></i>Vận Hành & Hỗ Trợ</h6>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Hotline hỗ trợ (Khảo sát/Tư vấn)</label>
+                        <input type="text" class="form-control" name="hotline" value="{{ partner.hotline if partner.hotline else '0901234567' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Khung giờ tiếp nhận cuộc gọi</label>
+                        <input type="text" class="form-control" name="working_hours" value="{{ partner.working_hours if partner.working_hours else '08:00 - 20:00 (T2 - CN)' }}" placeholder="Ví dụ: 08:00 - 20:00 (T2 - CN)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI: FORM CHI TIẾT GIAN HÀNG -->
+            <div class="col-lg-8">
+                
+                <!-- 1. Form thông tin thương hiệu & Dịch vụ -->
+                <div class="card card-custom p-4 mb-4">
+                    <h6 class="fw-bold mb-3"><i class="fa-solid fa-store text-primary me-2"></i>Thông Tin Gian Hàng / Thương Hiệu</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Tên thương hiệu / Nhà cung cấp</label>
+                            <input type="text" class="form-control" name="name" value="{{ partner.name if partner.name else user.username }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Số điện thoại liên hệ hotline</label>
+                            <input type="text" class="form-control" name="phone" value="{{ partner.phone if partner.phone else '0901234567' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Email nhận thông báo đơn hàng</label>
+                            <input type="email" class="form-control" value="{{ user.email }}" readonly>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Địa chỉ văn phòng / Sảnh kho thiết bị</label>
+                            <input type="text" class="form-control" name="address" value="{{ partner.address if partner.address else '' }}" placeholder="Nhập địa chỉ trụ sở">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Khu vực phục vụ (Tỉnh/Thành phố)</label>
+                            <input type="text" class="form-control" name="service_area" value="{{ partner.service_area if partner.service_area else '' }}" placeholder="Ví dụ: TP. Hồ Chí Minh, Bình Dương, Đồng Nai, Long An">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Mô tả ngắn về gian hàng (Giới thiệu cho khách)</label>
+                            <textarea class="form-control" name="description" rows="3" placeholder="Ví dụ: Chuyên cung cấp dịch vụ trang trí tiệc cưới, âm thanh ánh sáng chuyên nghiệp...">{{ partner.description if partner.description else '' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Quy định đặt cọc & Hủy tiệc (Cancellation Policy)</label>
+                            <textarea class="form-control" name="cancellation_policy" rows="2" placeholder="Ví dụ: Hủy trước 7 ngày hoàn 100% tiền cọc. Hủy từ 3-6 ngày phí 50% cọc. Hủy trong vòng 48h mất tiền cọc.">{{ partner.cancellation_policy if partner.cancellation_policy else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Portfolio Mẫu Sự Kiện (Bộ Sưu Tập) -->
+                <div class="card card-custom p-4 mb-4">
+                    <h6 class="fw-bold mb-3"><i class="fa-solid fa-images text-info me-2"></i>Bộ Sưu Tập / Portfolio Mẫu Tiệc</h6>
+                    <p class="text-muted small mb-3">Tải lên 5 - 10 hình ảnh chất lượng cao đại diện cho các dự án/tiệc sự kiện tiêu biểu đối tác đã thực hiện.</p>
+                    <div class="mb-3">
+                        <input type="file" class="form-control" name="portfolio_images" multiple accept="image/*">
+                    </div>
+                    {% if partner.portfolio %}
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            {% for img in partner.portfolio %}
+                                <div class="position-relative" style="width: 80px; height: 80px;">
+                                    <img src="{{ img }}" class="img-thumbnail w-100 h-100 object-fit-cover rounded">
+                                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 p-0 px-1" style="line-height: 1;" title="Xóa ảnh">&times;</button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- 3. Thông Tin Pháp Lý & B2B -->
+                <div class="card card-custom p-4 mb-4">
+                    <h6 class="fw-bold mb-3"><i class="fa-solid fa-file-contract text-warning me-2"></i>Thông Tin Pháp Lý & Hồ Sơ B2B</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Mã số thuế / Số ĐKKD <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="tax_code" value="{{ partner.tax_code if partner.tax_code else '' }}" placeholder="Ví dụ: 0312345678">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Người đại diện pháp luật</label>
+                            <input type="text" class="form-control" name="legal_representative" value="{{ partner.legal_representative if partner.legal_representative else '' }}" placeholder="Họ và tên người đại diện">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Chức danh</label>
+                            <input type="text" class="form-control" name="legal_position" value="{{ partner.legal_position if partner.legal_position else '' }}" placeholder="Ví dụ: Giám đốc / Chủ hộ kinh doanh">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Số CMND/CCCD</label>
+                            <input type="text" class="form-control" name="id_card_number" value="{{ partner.id_card_number if partner.id_card_number else '' }}" placeholder="Nhập số CCCD người đại diện">
+                        </div>
+                        
+                        <!-- Upload Giấy tờ chứng thực -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Giấy phép đăng ký kinh doanh (PDF/Ảnh)</label>
+                            <input type="file" class="form-control" name="license_doc" accept=".pdf,image/*">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Giấy Chứng nhận An toàn thực phẩm / Giấy ủy quyền</label>
+                            <input type="file" class="form-control" name="certificate_doc" accept=".pdf,image/*">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Form Ngân Hàng (Đã sửa triệt để Bug UI) -->
+                <div class="card card-custom p-4 mb-4">
+                    <h6 class="fw-bold mb-3"><i class="fa-solid fa-building-columns text-success me-2"></i>Tài Khoản Ngân Hàng Nhận Rút Tiền (Payout)</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Tên ngân hàng <span class="text-danger">*</span></label>
+                            <select class="form-select" name="bank_name">
+                                <option value="" disabled selected>-- Chọn ngân hàng --</option>
+                                <option value="Vietcombank" {{ 'selected' if partner.bank_name == 'Vietcombank' }}>Vietcombank (VCB)</option>
+                                <option value="Techcombank" {{ 'selected' if partner.bank_name == 'Techcombank' }}>Techcombank (TCB)</option>
+                                <option value="MBBank" {{ 'selected' if partner.bank_name == 'MBBank' }}>MB Bank (MB)</option>
+                                <option value="ACB" {{ 'selected' if partner.bank_name == 'ACB' }}>ACB</option>
+                                <option value="VietinBank" {{ 'selected' if partner.bank_name == 'VietinBank' }}>VietinBank</option>
+                                <option value="BIDV" {{ 'selected' if partner.bank_name == 'BIDV' }}>BIDV</option>
+                                <option value="VPBank" {{ 'selected' if partner.bank_name == 'VPBank' }}>VPBank</option>
+                                <option value="TPBank" {{ 'selected' if partner.bank_name == 'TPBank' }}>TPBank</option>
+                                <option value="Sacombank" {{ 'selected' if partner.bank_name == 'Sacombank' }}>Sacombank</option>
+                                <option value="Agribank" {{ 'selected' if partner.bank_name == 'Agribank' }}>Agribank</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Số tài khoản ngân hàng <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="bank_account_number" value="{{ partner.bank_account_number if partner.bank_account_number else '' }}" placeholder="Nhập STK nhận tiền">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Tên chủ tài khoản (Viết hoa không dấu) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="bank_account_holder" value="{{ partner.bank_account_holder if partner.bank_account_holder else 'NGUYEN VAN A' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Chi nhánh ngân hàng (Branch)</label>
+                            <input type="text" class="form-control" name="bank_branch" value="{{ partner.bank_branch if partner.bank_branch else '' }}" placeholder="Ví dụ: Chi nhánh TP.HCM, CN Tân Bình">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nút Lưu Toàn Bộ Cấu Hình Hồ Sơ (Được nằm gọn gàng bên trong layout) -->
+                <div class="text-end mb-4">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
+                        <i class="fa-solid fa-floppy-disk me-2"></i>Lưu Tất Cả Thay Đổi
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+    <!-- JAVASCRIPT CHUYỂN TAB MƯỢT MÀ -->
+    <script>
+        const titles = {
+            'tab-overview': { title: 'Tổng Quan Gian Hàng', sub: 'Báo cáo chỉ số kinh doanh và hoạt động gian hàng' },
+            'tab-orders': { title: 'Đơn Đặt Tiệc Dịch Vụ', sub: 'Quản lý toàn bộ tiến độ đơn hàng và hợp đồng với khách' },
+            'tab-services': { title: 'Danh Sách Gói Dịch Vụ', sub: 'Đăng bán và tùy chỉnh các gói trang trí, thiết bị sự kiện' },
+            'tab-wallet': { title: 'Ví & Doanh Thu Đối Tác', sub: 'Quản lý số dư, dòng tiền và tạo yêu cầu rút tiền về ngân hàng' },
+            'tab-profile': { title: 'Hồ Sơ & Cài Đặt Gian Hàng', sub: 'Quản lý thông tin thương hiệu và tài khoản nhận thanh toán' }
+        };
+
+        function switchTab(tabId, element) {
+            // 1. Ẩn tất cả các tab
+            document.querySelectorAll('.tab-pane-custom').forEach(pane => {
+                pane.classList.remove('active');
+            });
+
+            // 2. Bỏ active trên menu
+            document.querySelectorAll('.nav-link-custom').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // 3. Hiển thị tab được chọn
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+
+            // 4. Cập nhật Tiêu đề trang
+            if (titles[tabId]) {
+                document.getElementById('pageTitle').innerText = titles[tabId].title;
+                document.getElementById('pageSubTitle').innerText = titles[tabId].sub;
+            }
+        }
+    </script>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
