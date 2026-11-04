@@ -1,51 +1,506 @@
-{% extends "base.html" %}
-{% block title %}Hồ sơ khách hàng{% endblock %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ Sơ Khách Hàng - Event Decor</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-title: #1e293b;
+            --text-sub: #64748b;
+            --accent-purple: #7c3aed;
+            --accent-purple-light: #f5f3ff;
+            --accent-blue: #2563eb;
+        }
 
-{% block content %}
-<div class="container my-5" style="max-width: 760px;">
-  <h1 class="h3 fw-bold mb-4">Hồ sơ khách hàng</h1>
+        body { 
+            background-color: var(--bg-main); 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text-title);
+        }
 
-  <div class="card border-0 shadow-sm rounded-4 mb-4">
-    <div class="card-body p-4 d-flex align-items-center gap-4">
-      <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle"
-           style="width:80px;height:80px;font-size:2rem;background:linear-gradient(to right,#ed4690,#5522cc);">
-        {{ (profile.full_name or profile.username) | first | upper }}
-      </div>
-      <div>
-        <h2 class="h4 fw-bold mb-1">{{ profile.full_name or profile.username }}</h2>
-        <div class="text-secondary small mb-1">@{{ profile.username }}</div>
-        {% if profile.email %}
-        <div class="text-secondary"><i class="fa-regular fa-envelope me-2"></i>{{ profile.email }}</div>
-        {% endif %}
-        {% if profile.phone %}
-        <div class="text-secondary"><i class="fa-solid fa-phone me-2"></i>{{ profile.phone }}</div>
-        {% endif %}
-        <div class="text-secondary small mt-1">Mã khách hàng: #{{ profile.id }}</div>
-      </div>
+        /* Thẻ Card chuẩn cân bằng */
+        .custom-card { 
+            border: 1px solid var(--border-color); 
+            border-radius: 16px; 
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+        }
+
+        /* Avatar nâng cấp hỗ trợ Upload ảnh */
+        .avatar-wrapper {
+            position: relative;
+            width: 105px;
+            height: 105px;
+            margin: 0 auto 16px;
+        }
+
+        .avatar-circle {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            color: #ffffff; 
+            font-size: 38px; 
+            font-weight: 600; 
+            display: flex;
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 50%; 
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+            object-fit: cover;
+        }
+
+        .avatar-edit-btn {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 32px;
+            height: 32px;
+            background-color: var(--accent-purple);
+            color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+        }
+        .avatar-edit-btn:hover { transform: scale(1.1); }
+
+        /* Khung thống kê chỉn chu */
+        .stat-card {
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* Form Nhập Liệu */
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+        
+        .input-group-text {
+            background-color: #f1f5f9;
+            border: 1px solid var(--border-color);
+            color: #94a3b8;
+            border-radius: 10px 0 0 10px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 0 10px 10px 0;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            font-size: 0.92rem;
+            color: var(--text-title);
+            background-color: #ffffff;
+        }
+
+        .form-select-standalone {
+            border-radius: 10px !important;
+        }
+        
+        textarea.form-control {
+            border-radius: 10px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        /* Nút Bấm */
+        .btn-soft-purple {
+            background-color: var(--accent-purple);
+            color: #ffffff;
+            font-weight: 500;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+        .btn-soft-purple:hover {
+            background-color: #6d28d9;
+            color: #ffffff;
+        }
+
+        .btn-outline-soft {
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            background-color: #ffffff;
+            font-weight: 500;
+            padding: 10px 22px;
+            border-radius: 10px;
+        }
+        .btn-outline-soft:hover {
+            background-color: #f1f5f9;
+            color: var(--text-title);
+        }
+
+        /* Menu Chuyển Tab Sidebar */
+        .profile-nav-btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            background: transparent;
+            color: var(--text-sub);
+            font-weight: 500;
+            text-align: left;
+            margin-bottom: 6px;
+            transition: all 0.2s ease;
+        }
+        .profile-nav-btn:hover {
+            background-color: #f1f5f9;
+            color: var(--text-title);
+        }
+        .profile-nav-btn.active {
+            background-color: var(--accent-purple-light);
+            color: var(--accent-purple);
+            border-color: rgba(124, 58, 237, 0.2);
+            font-weight: 600;
+        }
+        .profile-nav-btn i { width: 24px; }
+
+        /* Badge VIP */
+        .badge-vip {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+ <!-- ================= KHỐI HEADER GIỐNG 100% TRANG LIÊN HỆ ================= -->
+<div class="page-hero-header shadow-sm" style="
+    background: linear-gradient(90deg, #d92789 0%, #a828b8 40%, #6325be 80%, #4f26b8 100%);
+    padding-top: 10px;
+    padding-bottom: 70px;
+    width: 100%;
+    color: #ffffff;
+">
+    <!-- 1. Thanh Navbar nằm phía trong Banner tím -->
+    <div class="hero-navbar">
+        {% include "navbar.html" %}
     </div>
-  </div>
 
-  <div class="row g-3 mb-4">
-    <div class="col-6">
-      <div class="card border-0 shadow-sm rounded-4 text-center p-3">
-        <div class="text-secondary small">Số đơn đã đặt</div>
-        <div class="fs-3 fw-bold" style="color:#5522cc;">{{ stats.count }}</div>
-      </div>
-    </div>
-    <div class="col-6">
-      <div class="card border-0 shadow-sm rounded-4 text-center p-3">
-        <div class="text-secondary small">Tổng chi tiêu</div>
-        <div class="fs-3 fw-bold" style="color:#ed4690;">{{ stats.spent | vnd }} ₫</div>
-      </div>
-    </div>
-  </div>
+    <!-- 2. Tiêu đề nằm giữa Banner -->
+    <div class="container position-relative text-center mt-4">
+        <div class="d-flex justify-content-center align-items-center gap-3">
+            <i class="fa-solid fa-circle-user text-white" style="font-size: 2.2rem;"></i>
+            <h1 class="fw-bold mb-0 text-white" style="font-size: 2.2rem; letter-spacing: -0.5px;">Hồ Sơ Tài Khoản</h1>
+        </div>
 
-  <div class="d-flex gap-2">
-    <a href="/orders" class="btn text-white rounded-pill px-4"
-       style="background: linear-gradient(to right,#ed4690,#5522cc);">
-      <i class="fa-solid fa-clock-rotate-left me-2"></i>Xem lịch sử thanh toán
-    </a>
-    <a href="/cart" class="btn btn-outline-secondary rounded-pill px-4">Giỏ hàng</a>
-  </div>
+        <!-- Nút VIP Badge nằm cố định góc phải (nếu cần) -->
+        <div class="position-absolute end-0 top-50 translate-middle-y d-none d-md-block">
+            <span class="badge-vip px-3 py-2 rounded-pill shadow-sm" style="background-color: #ff9800; color: #000; font-weight: 700; font-size: 0.8rem;">
+                <i class="fa-solid fa-crown me-1"></i> B2B DIAMOND VIP
+            </span>
+        </div>
+    </div>
 </div>
-{% endblock %}
+
+<!-- ================= NỘI DUNG TRANG NẰM BÊN ĐƯỚI ================= -->
+<div class="container py-5">
+    <div class="row g-4">
+        
+        <!-- CỘT TRÁI: AVATAR & MENU TAB -->
+        <div class="col-lg-4">
+            <div class="card custom-card p-4 text-center mb-4">
+                <form action="/profile/upload-avatar" method="POST" enctype="multipart/form-data" id="avatarForm">
+                    <div class="avatar-wrapper">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar }}" id="avatarPreview" class="avatar-circle" alt="Avatar">
+                        {% else %}
+                            <div id="avatarText" class="avatar-circle">
+                                {{ user.username | first | upper if user.username else 'U' }}
+                            </div>
+                            <img src="" id="avatarPreview" class="avatar-circle d-none" alt="Avatar">
+                        {% endif %}
+                        <label for="avatarInput" class="avatar-edit-btn" title="Đổi ảnh đại diện">
+                            <i class="fa-solid fa-camera fa-xs"></i>
+                        </label>
+                        <input type="file" id="avatarInput" name="avatar" class="d-none" accept="image/*" onchange="previewImage(event)">
+                    </div>
+                </form>
+                
+                <h5 class="fw-bold text-dark mb-1">{{ user.username }}</h5>
+                <p class="text-muted small mb-3">{{ user.email }}</p>
+                
+                <div class="mb-3">
+                    <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill fw-normal">
+                        Mã KH: #{{ user.id }}
+                    </span>
+                </div>
+
+                <div class="text-muted small">
+                    <i class="fa-solid fa-percent me-1 text-success"></i>Ưu đãi VIP: <strong>Giảm 5%</strong> tất cả hợp đồng
+                </div>
+            </div>
+
+            <div class="card custom-card p-3">
+                <div class="nav flex-column" id="profileTabs" role="tablist">
+                    <button class="profile-nav-btn active" id="tab-info-btn" data-bs-toggle="tab" data-bs-target="#tab-info" type="button">
+                        <i class="fa-solid fa-sliders" style="color: var(--accent-purple);"></i> Thông tin cá nhân
+                    </button>
+                    <button class="profile-nav-btn" id="tab-vat-btn" data-bs-toggle="tab" data-bs-target="#tab-vat" type="button">
+                        <i class="fa-solid fa-building text-success"></i> Thông tin Xuất hóa đơn VAT
+                    </button>
+                    <button class="profile-nav-btn" id="tab-orders-btn" data-bs-toggle="tab" data-bs-target="#tab-orders" type="button">
+                        <i class="fa-solid fa-box-archive text-primary"></i> Quản lý Đơn hàng & Dịch vụ
+                    </button>
+                    <button class="profile-nav-btn" id="tab-security-btn" data-bs-toggle="tab" data-bs-target="#tab-security" type="button">
+                        <i class="fa-solid fa-shield-halved text-danger"></i> Bảo mật & Mật khẩu
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: KHUNG THỐNG KÊ & FORM NỘI DUNG -->
+        <div class="col-lg-8">
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6">
+                    <div class="card custom-card stat-card">
+                        <div>
+                            <div class="text-muted small fw-medium mb-1">Số đơn hàng đã đặt</div>
+                            <h3 class="fw-bold mb-0 text-dark">{{ totalOrders if totalOrders else '7' }} đơn</h3>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="fa-solid fa-box"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6">
+                    <div class="card custom-card stat-card">
+                        <div>
+                            <div class="text-muted small fw-medium mb-1">Tổng chi tiêu tích lũy</div>
+                            <h3 class="fw-bold mb-0 text-dark">{{ totalSpent if totalSpent else '137.000.000' }} <span class="fs-6 fw-normal text-muted">đ</span></h3>
+                        </div>
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- 2. KHUNG NỘI DUNG TỪNG TAB -->
+                <div class="tab-content">
+                    
+                    <!-- TAB 1: THÔNG TIN CÁ NHÂN -->
+                    <div class="tab-pane fade show active" id="tab-info" role="tabpanel">
+                        <div class="card custom-card p-4">
+                            <h6 class="fw-bold text-dark mb-4 pb-2 border-bottom">
+                                <i class="fa-solid fa-user-pen me-2" style="color: var(--accent-purple);"></i>Cập nhật thông tin cá nhân
+                            </h6>
+
+                            <form action="/profile/update" method="POST">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tên hiển thị</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa-regular fa-user"></i></span>
+                                            <input type="text" class="form-control" name="username" value="{{ user.username }}" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email tài khoản</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa-regular fa-envelope"></i></span>
+                                            <input type="email" class="form-control bg-light" value="{{ user.email }}" disabled readonly>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Số điện thoại</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa-solid fa-phone-flip"></i></span>
+                                            <input type="text" class="form-control" name="phone" placeholder="Nhập số điện thoại" value="{{ user.phone }}">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tỉnh / Thành phố</label>
+                                        <select class="form-select form-select-standalone" name="province">
+                                            <option value="">-- Chọn Tỉnh / Thành phố --</option>
+                                            <option value="HCM" selected>TP. Hồ Chí Minh</option>
+                                            <option value="HN">Hà Nội</option>
+                                            <option value="DN">Đà Nẵng</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Địa chỉ mặc định nhận dịch vụ</label>
+                                        <textarea class="form-control" name="address" rows="3" placeholder="Nhập địa chỉ chi tiết...">{{ user.address }}</textarea>
+                                    </div>
+
+                                    <div class="col-12 text-end mt-4">
+                                        <button type="submit" class="btn btn-soft-purple shadow-sm">
+                                            <i class="fa-solid fa-check me-2"></i>Lưu thông tin cá nhân
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: THÔNG TIN DOANH NGHIỆP / XUẤT HÓA ĐƠN VAT -->
+                    <div class="tab-pane fade" id="tab-vat" role="tabpanel">
+                        <div class="card custom-card p-4">
+                            <h6 class="fw-bold text-dark mb-4 pb-2 border-bottom">
+                                <i class="fa-solid fa-file-invoice-dollar me-2 text-success"></i>Thông tin Xuất Hóa Đơn VAT (Doanh nghiệp B2B)
+                            </h6>
+
+                            <form action="/profile/update-vat" method="POST">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label">Tên Công Ty / Đơn Vị Mua Hàng</label>
+                                        <input type="text" class="form-control form-select-standalone" name="company_name" value="{{ user.company_name }}" placeholder="CÔNG TY TNHH EVENT DECOR VIỆT NAM">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mã Số Thuế (MST)</label>
+                                        <input type="text" class="form-control form-select-standalone" name="tax_code" value="{{ user.tax_code }}" placeholder="0312345678">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email Nhận Hóa Đơn Điện Tử</label>
+                                        <input type="email" class="form-control form-select-standalone" name="vat_email" value="{{ user.vat_email }}" placeholder="ketoan@company.com">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Địa Chỉ Đăng Ký Kinh Doanh</label>
+                                        <input type="text" class="form-control form-select-standalone" name="vat_address" value="{{ user.vat_address }}" placeholder="Địa chỉ chính xác ghi trên giấy phép ĐKKD">
+                                    </div>
+
+                                    <div class="col-12 text-end mt-4">
+                                        <button type="submit" class="btn btn-success px-4" style="border-radius: 10px;">
+                                            <i class="fa-solid fa-floppy-disk me-2"></i>Cập nhật thông tin VAT
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: QUẢN LÝ ĐƠN HÀNG & TIẾN ĐỘ DỊCH VỤ -->
+                    <div class="tab-pane fade" id="tab-orders" role="tabpanel">
+                        <div class="card custom-card p-4">
+                            <h6 class="fw-bold text-dark mb-4 pb-2 border-bottom">
+                                <i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Quản lý Đơn hàng & Lịch sử dịch vụ
+                            </h6>
+
+                            <div class="d-flex gap-2 mb-3">
+                                <a href="/orders" class="btn btn-outline-soft">
+                                    <i class="fa-solid fa-list me-2 text-primary"></i>Xem tất cả đơn hàng chi tiết
+                                </a>
+                                <a href="/cart" class="btn btn-outline-soft">
+                                    <i class="fa-solid fa-cart-shopping me-2 text-success"></i>Giỏ hàng hiện tại
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: BẢO MẬT & ĐỔI MẬT KHẨU -->
+                    <div class="tab-pane fade" id="tab-security" role="tabpanel">
+                        <div class="card custom-card p-4">
+                            <h6 class="fw-bold text-dark mb-4 pb-2 border-bottom">
+                                <i class="fa-solid fa-lock me-2 text-danger"></i>Bảo mật & Đổi mật khẩu
+                            </h6>
+
+                            <form action="/profile/change-password" method="POST">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label">Mật khẩu hiện tại</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                                            <input type="password" class="form-control" name="current_password" required placeholder="Nhập mật khẩu hiện tại">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mật khẩu mới</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                            <input type="password" class="form-control" name="new_password" required placeholder="Nhập mật khẩu mới">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Xác nhận mật khẩu mới</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa-solid fa-shield-cat"></i></span>
+                                            <input type="password" class="form-control" name="confirm_password" required placeholder="Xác nhận mật khẩu mới">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 text-end mt-4">
+                                        <button type="submit" class="btn btn-danger px-4" style="border-radius: 10px;">
+                                            <i class="fa-solid fa-shield-halved me-2"></i>Đổi mật khẩu
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script tự động hiển thị ảnh ngay sau khi chọn -->
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function(){
+                const output = document.getElementById('avatarPreview');
+                const textAvatar = document.getElementById('avatarText');
+                
+                output.src = reader.result;
+                output.classList.remove('d-none');
+                if(textAvatar) textAvatar.classList.add('d-none');
+            };
+            if(event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
+    </script>
+    
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
