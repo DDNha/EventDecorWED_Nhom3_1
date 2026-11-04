@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Quản Lý Thanh Toán & Rút Tiền</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; min-height: 100vh; }
+        .admin-sidebar { width: 250px; min-height: 100vh; background-color: #1e2229; padding: 20px 15px; color: #abb2bf; display: flex; flex-direction: column; }
+        .sidebar-brand { display: flex; align-items: center; gap: 8px; }
+        .brand-icon { color: #ffc107; font-size: 20px; }
+        .brand-title { color: #ffffff; font-weight: 800; font-size: 18px; }
+        .sidebar-user { font-size: 13px; color: #ffffff; font-weight: 600; margin-left: 28px; }
+        .sidebar-divider { border-color: rgba(255, 255, 255, 0.1); margin: 15px 0; }
+        .sidebar-menu { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .menu-header { font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; margin-top: 15px; margin-bottom: 8px; padding-left: 10px; }
+        .menu-link { display: flex; align-items: center; padding: 10px 12px; color: #c2c7d0; text-decoration: none; font-size: 14px; border-radius: 8px; }
+        .menu-link:hover { background-color: rgba(255, 255, 255, 0.08); color: #ffffff; }
+        .menu-link.active { background-color: #0d6efd; color: #ffffff; font-weight: 600; box-shadow: 0 2px 6px rgba(13, 110, 253, 0.4); }
+        .menu-icon { width: 20px; margin-right: 10px; text-align: center; }
+        .home-link { color: #ffc107; text-decoration: none; font-weight: 700; font-size: 14px; padding: 8px 10px; display: flex; align-items: center; }
+        
+        .main-content { background-color: #f8f9fa; }
+        .card-custom { border-radius: 12px; }
+        .fs-12 { font-size: 12px; }
+        .font-monospace { font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .qr-box { background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #dee2e6; text-align: center; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="d-flex">
+        <!-- SIDEBAR ADMIN CHUẨN -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-shield-halved brand-icon"></i>
+                <span class="brand-title">ADMIN PANEL</span>
+            </div>
+            <div class="sidebar-user">seed_admin</div>
+            <hr class="sidebar-divider">
+
+            <ul class="sidebar-menu">
+                <li class="menu-header">QUẢN LÝ HỆ THỐNG</li>
+                <li class="menu-item"><a href="/admin/user-detail" class="menu-link"><i class="fa-solid fa-users menu-icon"></i>Quản lý Người dùng</a></li>
+                <li class="menu-item"><a href="/admin/partners" class="menu-link"><i class="fa-solid fa-store menu-icon"></i>Quản lý Đối tác / Gian hàng</a></li>
+                <li class="menu-item"><a href="/admin/products" class="menu-link"><i class="fa-solid fa-box-open menu-icon"></i>Quản lý Sản phẩm / Dịch vụ</a></li>
+                <li class="menu-item"><a href="admin-orders.html" class="menu-link"><i class="fa-solid fa-calendar-check menu-icon"></i>Quản lý Đơn hàng & Lịch</a></li>
+                <li class="menu-item"><a href="admin-disputes.html" class="menu-link"><i class="fa-solid fa-headset menu-icon"></i>Khiếu nại & Hỗ trợ</a></li>
+                
+                <li class="menu-header">THỐNG KÊ & BÁO CÁO</li>
+                <li class="menu-item"><a href="#" class="menu-link"><i class="fa-solid fa-chart-line menu-icon"></i>Doanh thu & Hoa hồng</a></li>
+                <li class="menu-item"><a href="admin-payouts.html" class="menu-link active"><i class="fa-solid fa-wallet menu-icon"></i>Thanh toán & Rút tiền</a></li>
+                
+                <li class="menu-header">CÀI ĐẶT & ĐIỀU HƯỚNG</li>
+                <li class="menu-item"><a href="#" class="menu-link"><i class="fa-solid fa-gear menu-icon"></i>Cài đặt Hệ thống</a></li>
+            </ul>
+
+            <hr class="sidebar-divider">
+            <a href="/" class="home-link"><i class="fa-solid fa-house me-2"></i>Về trang chủ sàn</a>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-grow-1 p-4 main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1">Quản Lý Thanh Toán & Rút Tiền (Payout Management)</h4>
+                    <p class="text-muted small mb-0">Duyệt yêu cầu rút tiền từ Vendor, đối soát dòng tiền và hoàn cọc cho khách hàng</p>
+                </div>
+                <button class="btn btn-outline-danger btn-sm rounded-pill"><i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất</button>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-warning">
+                        <span class="text-muted fs-12">Yêu cầu chờ duyệt</span>
+                        <h3 class="fw-bold text-warning my-1" id="kpiPending">2 Yêu cầu</h3>
+                        <span class="text-muted fs-12">Tổng tiền: 50.100.000 đ</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-success">
+                        <span class="text-muted fs-12">Đã giải ngân tháng này</span>
+                        <h3 class="fw-bold text-success my-1">125.400.000 đ</h3>
+                        <span class="text-muted fs-12">18 lệnh rút tiền thành công</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-primary">
+                        <span class="text-muted fs-12">Tiền cọc đóng băng sàn</span>
+                        <h3 class="fw-bold text-primary my-1">88.500.000 đ</h3>
+                        <span class="text-muted fs-12">Giữ an toàn chờ hoàn thành tiệc</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom border-0 shadow-sm p-3 border-start border-4 border-info">
+                        <span class="text-muted fs-12">Hoàn cọc (Refund Khách)</span>
+                        <h3 class="fw-bold text-info my-1">7.500.000 đ</h3>
+                        <span class="text-muted fs-12">Do khiếu nại / Hủy tiệc hợp lệ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="card card-custom border-0 shadow-sm p-3 mb-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Tìm theo Mã Lệnh (#PAY), Mã đơn (#ORD), Tên Vendor, STK...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="typeFilter" class="form-select">
+                            <option value="">-- Tất cả loại giao dịch --</option>
+                            <option value="vendor_payout">Vendor rút tiền tiệc</option>
+                            <option value="customer_refund">Hoàn cọc cho Khách</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="statusFilter" class="form-select">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            <option value="pending">Chờ duyệt</option>
+                            <option value="approved">Đã giải ngân</option>
+                            <option value="rejected">Từ chối</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100" id="btnFilter"><i class="fa-solid fa-filter me-1"></i>Lọc dữ liệu</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payout Table -->
+            <div class="card card-custom border-0 shadow-sm p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Mã Lệnh & Ngày</th>
+                                <th>Bên Nhận Tiền</th>
+                                <th>Tài Khoản Ngân Hàng</th>
+                                <th>Đơn Tiệc Liên Quan</th>
+                                <th class="text-end">Số Tiền Rút</th>
+                                <th class="text-center">Trạng Thái</th>
+                                <th class="text-center" style="width: 170px;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payoutTableBody">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DUYỆT CHUYỂN TIỀN -->
+    <div class="modal fade" id="payoutModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fs-6 fw-bold"><i class="fa-solid fa-paper-plane text-warning me-2"></i>Phê Duyệt Rút Tiền / Giải Ngân</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="p-3 bg-light rounded border mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted fs-12">Mã lệnh rút:</span>
+                            <span class="fw-bold font-monospace" id="modalPayId">#PAY-000</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted fs-12">Bên nhận:</span>
+                            <span class="fw-semibold text-dark" id="modalReceiver">--</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted fs-12">Ngân hàng:</span>
+                            <span class="fw-bold text-primary" id="modalBank">--</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted fs-12">Số tiền cần chuyển:</span>
+                            <span class="fs-5 fw-bold text-danger" id="modalAmount">0 đ</span>
+                        </div>
+                    </div>
+
+                    <!-- Quét VietQR -->
+                    <div class="qr-box mb-3">
+                        <div class="text-muted fs-12 mb-2"><i class="fa-solid fa-qrcode me-1"></i>Quét VietQR để chuyển khoản nhanh:</div>
+                        <img id="modalQrCode" src="https://via.placeholder.com/200x200?text=VietQR+Code" alt="VietQR" class="img-fluid rounded" style="max-width: 180px;">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fs-12 fw-semibold mb-1">Mã Giao Dịch Ngân Hàng (FT / Reference No):</label>
+                        <input type="text" id="bankTxId" class="form-control form-control-sm" placeholder="VD: FT2611059982">
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-success btn-sm rounded-pill px-4" onclick="confirmPayout()"><i class="fa-solid fa-check-circle me-1"></i>Xác Nhận Đã Chuyển Tiền</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let payoutsData = [
+            {
+                id: "PAY-1002",
+                createdAt: "05/11/2026 09:10",
+                receiver: "seed_partner_media",
+                type: "vendor_payout",
+                bankName: "MBBank",
+                bankAccount: "0988777666",
+                accountHolder: "NGUYEN VAN MEDIA",
+                orderId: "ORD-8815",
+                amount: 27600000,
+                status: "pending"
+            },
+            {
+                id: "PAY-1001",
+                createdAt: "04/11/2026 14:20",
+                receiver: "seed_partner_party",
+                type: "vendor_payout",
+                bankName: "Vietcombank",
+                bankAccount: "9912345678",
+                accountHolder: "CONG TY SU KIEN LUXURY",
+                orderId: "ORD-8790",
+                amount: 22500000,
+                status: "pending"
+            },
+            {
+                id: "PAY-0998",
+                createdAt: "01/11/2026 16:45",
+                receiver: "Lê Văn C (Khách)",
+                type: "customer_refund",
+                bankName: "Techcombank",
+                bankAccount: "1903456789",
+                accountHolder: "LE VAN C",
+                orderId: "ORD-8710",
+                amount: 7500000,
+                status: "approved"
+            }
+        ];
+
+        let selectedPayId = null;
+        let payoutModalInstance = null;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            payoutModalInstance = new bootstrap.Modal(document.getElementById('payoutModal'));
+            renderTable(payoutsData);
+            document.getElementById("btnFilter").addEventListener("click", applyFilters);
+        });
+
+        function renderTable(data) {
+            const tbody = document.getElementById("payoutTableBody");
+            tbody.innerHTML = "";
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Không có dữ liệu rút tiền.</td></tr>`;
+                return;
+            }
+
+            data.forEach(p => {
+                let statusBadge = p.status === 'pending' ? `<span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>Chờ duyệt</span>` :
+                                 (p.status === 'approved' ? `<span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Đã giải ngân</span>` : 
+                                 `<span class="badge bg-danger"><i class="fa-solid fa-xmark me-1"></i>Từ chối</span>`);
+
+                let typeLabel = p.type === 'vendor_payout' ? `<span class="badge bg-info-subtle text-info border border-info fs-12">Vendor Rút Doanh Thu</span>` : `<span class="badge bg-danger-subtle text-danger border border-danger fs-12">Hoàn cọc cho Khách</span>`;
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>
+                        <span class="fw-bold font-monospace">#${p.id}</span>
+                        <div class="text-muted fs-12">${p.createdAt}</div>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark">${p.receiver}</div>
+                        ${typeLabel}
+                    </td>
+                    <td>
+                        <div class="fw-bold text-primary fs-12">${p.bankName} - ${p.bankAccount}</div>
+                        <div class="text-muted fs-12 text-uppercase">${p.accountHolder}</div>
+                    </td>
+                    <td><a href="admin-orders.html" class="fw-bold text-decoration-none">#${p.orderId}</a></td>
+                    <td class="text-end fw-bold text-danger fs-6">${p.amount.toLocaleString('vi-VN')} đ</td>
+                    <td class="text-center">${statusBadge}</td>
+                    <td class="text-center">
+                        ${p.status === 'pending' ? `
+                            <button class="btn btn-sm btn-success rounded-pill px-2 me-1" onclick="openPayoutModal('${p.id}')"><i class="fa-solid fa-check me-1"></i>Duyệt</button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-2" onclick="rejectPayout('${p.id}')"><i class="fa-solid fa-xmark"></i></button>
+                        ` : `<span class="text-muted fs-12">Đã hoàn tất</span>`}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openPayoutModal(payId) {
+            selectedPayId = payId;
+            const p = payoutsData.find(item => item.id === payId);
+            if (!p) return;
+
+            document.getElementById("modalPayId").innerText = "#" + p.id;
+            document.getElementById("modalReceiver").innerText = p.receiver;
+            document.getElementById("modalBank").innerText = `${p.bankName} - STK: ${p.bankAccount} (${p.accountHolder})`;
+            document.getElementById("modalAmount").innerText = p.amount.toLocaleString('vi-VN') + " đ";
+            
+            // Link VietQR động
+            document.getElementById("modalQrCode").src = `https://img.vietqr.io/image/${p.bankName}-${p.bankAccount}-compact2.png?amount=${p.amount}&addInfo=${p.id}%20${p.orderId}`;
+
+            payoutModalInstance.show();
+        }
+
+        function confirmPayout() {
+            const txId = document.getElementById("bankTxId").value.trim();
+            if (!txId) {
+                alert("Vui lòng nhập Mã Giao Dịch Ngân Hàng (FT / Reference No) để lưu vết đối soát!");
+                return;
+            }
+
+            const p = payoutsData.find(item => item.id === selectedPayId);
+            if (p) {
+                p.status = 'approved';
+                renderTable(payoutsData);
+                payoutModalInstance.hide();
+                alert(`Đã xác nhận giải ngân số tiền ${p.amount.toLocaleString('vi-VN')} đ cho lệnh #${p.id}.\nMã GD: ${txId}`);
+            }
+        }
+
+        function rejectPayout(payId) {
+            if (confirm(`Bạn có chắc chắn muốn TỪ CHỐI yêu cầu rút tiền #${payId}?`)) {
+                const p = payoutsData.find(item => item.id === payId);
+                if (p) {
+                    p.status = 'rejected';
+                    renderTable(payoutsData);
+                }
+            }
+        }
+
+        function applyFilters() {
+            const searchVal = document.getElementById("searchInput").value.toLowerCase().trim();
+            const typeVal = document.getElementById("typeFilter").value;
+            const statusVal = document.getElementById("statusFilter").value;
+
+            const filtered = payoutsData.filter(p => {
+                const matchSearch = p.id.toLowerCase().includes(searchVal) || 
+                                    p.orderId.toLowerCase().includes(searchVal) || 
+                                    p.receiver.toLowerCase().includes(searchVal) ||
+                                    p.bankAccount.includes(searchVal);
+                const matchType = typeVal === "" || p.type === typeVal;
+                const matchStatus = statusVal === "" || p.status === statusVal;
+
+                return matchSearch && matchType && matchStatus;
+            });
+
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

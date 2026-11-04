@@ -33,37 +33,46 @@
         </li>
 
         <!-- Menu người dùng: hiện sau khi đăng nhập -->
-        <li class="nav-item dropdown" id="userMenu" hidden="hidden">
-          <a id="username" class="btn btn-pill text-white btn-register dropdown-toggle"
-             href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"></a>
-          <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
-            <li id="adminMenuItem" hidden="hidden">
-              <a class="dropdown-item" href="/admin">
-                <i class="fa-solid fa-gauge-high me-2"></i>Trung tâm quản trị
-              </a>
-            </li>
-            <li id="partnerMenuItem" hidden="hidden">
-              <a class="dropdown-item" href="/partner/orders/new">
-                <i class="fa-solid fa-file-circle-plus me-2"></i>Tạo đơn đối tác
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="/profile">
-                <i class="fa-regular fa-user me-2"></i>Hồ sơ khách hàng
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="/orders">
-                <i class="fa-solid fa-clock-rotate-left me-2"></i>Lịch sử thanh toán
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="/report">
-                <i class="fa-regular fa-message me-2"></i>Gửi phản ánh
-              </a>
-            </li>
-          </ul>
-        </li>
+<li class="nav-item dropdown" id="userMenu" hidden="hidden">
+  <a id="username" class="btn btn-pill text-white btn-register dropdown-toggle"
+     href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"></a>
+  <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+    <li id="adminMenuItem" hidden="hidden">
+      <a class="dropdown-item" href="/admin/user-detail">
+        <i class="fa-solid fa-gauge-high me-2"></i>Trung tâm quản trị
+      </a>
+    </li>
+    <li id="partnerMenuItem" hidden="hidden">
+      <a class="dropdown-item" href="/partner/orders/new">
+        <i class="fa-solid fa-file-circle-plus me-2"></i>Tạo đơn đối tác
+      </a>
+    </li>
+    
+    <!-- ĐÃ ĐỔI: Chuyển href sang /user-profile để Backend tự rẽ nhánh theo vai trò -->
+    <li>
+      <a class="dropdown-item" href="/user-profile">
+        <i class="fa-regular fa-user me-2"></i>Hồ sơ khách hàng
+      </a>
+    </li>
+    
+    <li>
+      <a class="dropdown-item" href="/orders">
+        <i class="fa-solid fa-clock-rotate-left me-2"></i>Lịch sử thanh toán
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item" href="/report">
+        <i class="fa-regular fa-message me-2"></i>Gửi phản ánh
+      </a>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <a class="dropdown-item text-danger" href="/logout">
+        <i class="fa-solid fa-power-off me-2"></i>Đăng xuất
+      </a>
+    </li>
+  </ul>
+</li>
 
         <li class="nav-item">
           <a id="logout" class="btn btn-pill text-white btn-register" href="/logout" hidden="hidden">Đăng xuất</a>
