@@ -2,7 +2,6 @@ const express = require("express");
 
 // Giỏ hàng và checkout trong app.js vẫn đọc mảng này (chưa chuyển sang database).
 const SERVICES = [];
-let productsHasCategory;
 
 // Khoảng giá của bộ lọc "Mức giá" trên trang dịch vụ
 const PRICE_RANGES = {
@@ -29,16 +28,6 @@ function toService(row) {
   };
 }
 
-async function supportsProductCategory(pool) {
-  if (productsHasCategory !== undefined) return productsHasCategory;
-
-  const [columns] = await pool.query(
-    "SHOW COLUMNS FROM products LIKE 'category'",
-  );
-  productsHasCategory = columns.length > 0;
-  return productsHasCategory;
-}
-
 module.exports = function ({ pool }) {
   const router = express.Router();
 
@@ -49,15 +38,19 @@ module.exports = function ({ pool }) {
     const price = PRICE_RANGES[req.query.price] ? req.query.price : "";
 
     try {
-      const hasCategory = await supportsProductCategory(pool);
       const clauses = [];
       const params = [];
       if (q) {
         clauses.push("p.name LIKE ?");
         params.push(`%${q}%`);
       }
-      if (category && hasCategory) {
-        clauses.push("p.category = ?");
+      if (category) {
+        clauses.push(`EXISTS (
+          SELECT 1
+          FROM partner_specialties ps
+          JOIN specialties s ON s.id = ps.specialty_id
+          WHERE ps.partner_id = p.partner_id AND s.name = ?
+        )`);
         params.push(category);
       }
       if (price) clauses.push(PRICE_RANGES[price].sql);
@@ -71,13 +64,13 @@ module.exports = function ({ pool }) {
          ORDER BY p.id`,
         params,
       );
-      const [categories] = hasCategory
-        ? await pool.query(
-            `SELECT DISTINCT category FROM products
-             WHERE category IS NOT NULL AND category <> ''
-             ORDER BY category`,
-          )
-        : [[]];
+      const [categories] = await pool.query(
+        `SELECT DISTINCT s.name AS category
+         FROM specialties s
+         JOIN partner_specialties ps ON ps.specialty_id = s.id
+         JOIN products p ON p.partner_id = ps.partner_id
+         ORDER BY s.name`,
+      );
 
       res.render("eventservices.html", {
         services: rows.map(toService),
