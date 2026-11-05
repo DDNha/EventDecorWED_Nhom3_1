@@ -1,6 +1,6 @@
 .header-page {
-  height: 100%;
-  min-height: 425px;
+  height: auto;
+  min-height: 220px;
 }
 .title-about-us {
   color: #242565;

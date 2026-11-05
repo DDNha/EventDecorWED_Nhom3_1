@@ -6,7 +6,7 @@
   height: 50px;
   min-width: 250px;
   border-radius: 30px;
-  padding-left: 35px;
+  padding-left: 42px;
   border: none;
   box-shadow: 0 0 10px #b8b3b3;
 }
@@ -17,6 +17,7 @@
   left: 15px;
   transform: translateY(-50%);
   color: #888;
+  pointer-events: none;
 }
 .btn-drop {
   border-radius: 30px;
